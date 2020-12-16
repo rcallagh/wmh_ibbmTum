@@ -42,4 +42,42 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
     FLAIR_image -=np.mean(FLAIR_image[brain_mask_FLAIR == 1])      #Gaussion Normalization
     FLAIR_image /=np.std(FLAIR_image[brain_mask_FLAIR == 1])
 
+
+
+#    import pdb; pdb.set_trace()
+    FLAIR_image_suitable[...] = np.min(FLAIR_image)
+    if rows_to_shrink:
+        lhs_row_min = 0;
+        lhs_row_max = rows_standard;
+
+        row_offset = int(brain_CoM_row - rows_standard/2)
+        if (row_offset + rows_standard/2) > image_rows_Dataset/2:
+            row_offset -= int(row_offset + rows_standard/2 - image_rows_Dataset/2)
+
+        rhs_row_min = int(image_rows_Dataset/2-rows_standard/2 + row_offset);
+        rhs_row_max = int(image_rows_Dataset/2+rows_standard/2 + row_offset);
+
+    else:
+#        import pdb; pdb.set_trace()
+        lhs_row_min = int(rows_standard/2 - image_rows_Dataset/2)
+        lhs_row_max = int(rows_standard/2 + image_rows_Dataset/2)
+        rhs_row_min = 0
+        rhs_row_max = image_rows_Dataset
+
+    if cols_to_shrink:
+        lhs_col_min = 0
+        lhs_col_max = cols_standard
+
+        col_offset = int(brain_CoM_col - cols_standard/2)
+        if (col_offset + cols_standard/2) > image_cols_Dataset/2:
+            col_offset -= int(col_offset + cols_standard/2 - image_cols_Dataset/2)
+
+        rhs_col_min = int(image_cols_Dataset/2-cols_standard/2 + col_offset)
+        rhs_col_max = int(image_cols_Dataset/2+cols_standard/2 + col_offset)
+
+    else:
+        lhs_col_min = int(cols_standard/2-image_cols_Dataset/2)
+        lhs_col_max = int(cols_standard/2+image_cols_Dataset/2)
+        rhs_col_min = 0
+        rhs_col_max = image_cols_Dataset
 def postprocessing(FLAIR_array, pred, rowcol_info):
