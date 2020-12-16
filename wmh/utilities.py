@@ -85,4 +85,19 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
     FLAIR_image_suitable[:, lhs_row_min:lhs_row_max, lhs_col_min:lhs_col_max] = FLAIR_image[:, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max]
     filename_resultImage = os.path.join(outputDir,'FLAIR_crop.nii.gz')
     sitk.WriteImage(sitk.GetImageFromArray(FLAIR_image_suitable), filename_resultImage )
+    #   # T1 -----------------------------------------------
+    if rowcol_info["two_modalities"]:
+        brain_mask_T1[T1_image >= thresh] = 1
+        brain_mask_T1[T1_image <  thresh] = 0
+        for iii in range(np.shape(T1_image)[0]):
+
+            brain_mask_T1[iii,:,:] = scipy.ndimage.morphology.binary_fill_holes(brain_mask_T1[iii,:,:])  #fill the holes inside brain
+        #------Gaussion Normalization
+        T1_image -=np.mean(T1_image[brain_mask_T1 == 1])      #Gaussion Normalization
+        T1_image /=np.std(T1_image[brain_mask_T1 == 1])
+
+        T1_image_suitable[...] = np.min(T1_image)
+        T1_image_suitable[:, lhs_row_min:lhs_row_max, lhs_col_min:lhs_col_max] = T1_image[:, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max]
+        filename_resultImage = os.path.join(outputDir,'T1_crop.nii.gz')
+        sitk.WriteImage(sitk.GetImageFromArray(T1_image_suitable), filename_resultImage, imageIO="NiftiImageIO")
 def postprocessing(FLAIR_array, pred, rowcol_info):
