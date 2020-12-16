@@ -80,4 +80,9 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
         lhs_col_max = int(cols_standard/2+image_cols_Dataset/2)
         rhs_col_min = 0
         rhs_col_max = image_cols_Dataset
+
+#    import pdb; pdb.set_trace()
+    FLAIR_image_suitable[:, lhs_row_min:lhs_row_max, lhs_col_min:lhs_col_max] = FLAIR_image[:, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max]
+    filename_resultImage = os.path.join(outputDir,'FLAIR_crop.nii.gz')
+    sitk.WriteImage(sitk.GetImageFromArray(FLAIR_image_suitable), filename_resultImage )
 def postprocessing(FLAIR_array, pred, rowcol_info):
