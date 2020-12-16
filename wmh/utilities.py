@@ -15,4 +15,22 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
 
     rows_to_shrink = image_rows_Dataset >= rowcol_info["rows_standard"]
     cols_to_shrink = image_cols_Dataset >= rowcol_info["cols_standard"]
+
+    FLAIR_image = np.float32(FLAIR_image)
+    T1_image = np.float32(T1_image)
+
+    brain_mask_FLAIR = np.ndarray((np.shape(FLAIR_image)[0],image_rows_Dataset, image_cols_Dataset), dtype=np.float32)
+    brain_mask_T1 = np.ndarray((np.shape(FLAIR_image)[0],image_rows_Dataset, image_cols_Dataset), dtype=np.float32)
+    imgs_two_channels = np.ndarray((num_selected_slice, rows_standard, cols_standard, channel_num), dtype=np.float32)
+    imgs_mask_two_channels = np.ndarray((num_selected_slice, rows_standard, cols_standard,1), dtype=np.float32)
+    FLAIR_image_suitable = np.ndarray((num_selected_slice, rows_standard, cols_standard), dtype=np.float32)
+    T1_image_suitable = np.ndarray((num_selected_slice, rows_standard, cols_standard), dtype=np.float32)
+
+    # FLAIR --------------------------------------------
+    brain_mask_FLAIR[FLAIR_image >= rowcol_info["thresh"]] = 1
+    brain_mask_FLAIR[FLAIR_image < rowcol_info["thresh"]] = 0
+    for iii in range(np.shape(FLAIR_image)[0]):
+
+        brain_mask_FLAIR[iii,:,:] = scipy.ndimage.morphology.binary_fill_holes(brain_mask_FLAIR[iii,:,:])  #fill the holes inside brain
+
 def postprocessing(FLAIR_array, pred, rowcol_info):
