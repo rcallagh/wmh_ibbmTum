@@ -37,4 +37,9 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
     brain_CoM = scipy.ndimage.center_of_mass(brain_mask_FLAIR)
     brain_CoM_row = int(brain_CoM[1])
     brain_CoM_col = int(brain_CoM[2])
+
+    #------Gaussion Normalization
+    FLAIR_image -=np.mean(FLAIR_image[brain_mask_FLAIR == 1])      #Gaussion Normalization
+    FLAIR_image /=np.std(FLAIR_image[brain_mask_FLAIR == 1])
+
 def postprocessing(FLAIR_array, pred, rowcol_info):
