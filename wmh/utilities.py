@@ -5,7 +5,27 @@ import tensorflow as tf
 import difflib
 import SimpleITK as sitk
 
-def preprocessing(FLAIR_image, T1_image, rowcol_info):
+class ProcessingParams:
+    def __init__(self):
+        self.rows_standard = 200
+        self.cols_standard = 200
+        self.thresh_T1 = 70
+        self.thresh_FLAIR = 30
+        self.rhs_row_min = 0
+        self.rhs_row_max = 0
+        self.rhs_col_min = 0
+        self.rhs_col_max = 0
+        self.lhs_row_min = 0
+        self.lhs_row_max = 0
+        self.lhs_col_min = 0
+        self.lhs_col_max = 0
+        self.two_modalities = True
+
+    def updateFromArgs(self, args):
+        self.rows_standard = args.rows_standard
+        self.cols_standard = args.cols_standard
+
+def preprocessing(FLAIR_image, T1_image, proc_params):
     #  start_slice = 10
     channel_num = 2
     print(np.shape(FLAIR_image))
@@ -13,8 +33,8 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
     image_rows_Dataset = np.shape(FLAIR_image)[1]
     image_cols_Dataset = np.shape(FLAIR_image)[2]
 
-    rows_to_shrink = image_rows_Dataset >= rowcol_info["rows_standard"]
-    cols_to_shrink = image_cols_Dataset >= rowcol_info["cols_standard"]
+    rows_to_shrink = image_rows_Dataset >= proc_params.rows_standard
+    cols_to_shrink = image_cols_Dataset >= proc_params.cols_standard
 
     FLAIR_image = np.float32(FLAIR_image)
     T1_image = np.float32(T1_image)
@@ -27,8 +47,8 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
     T1_image_suitable = np.ndarray((num_selected_slice, rows_standard, cols_standard), dtype=np.float32)
 
     # FLAIR --------------------------------------------
-    brain_mask_FLAIR[FLAIR_image >= rowcol_info["thresh"]] = 1
-    brain_mask_FLAIR[FLAIR_image < rowcol_info["thresh"]] = 0
+    brain_mask_FLAIR[FLAIR_image >= proc_params.thresh_FLAIR] = 1
+    brain_mask_FLAIR[FLAIR_image < proc_params.thresh_FLAIR] = 0
     for iii in range(np.shape(FLAIR_image)[0]):
 
         brain_mask_FLAIR[iii,:,:] = scipy.ndimage.morphology.binary_fill_holes(brain_mask_FLAIR[iii,:,:])  #fill the holes inside brain
@@ -86,7 +106,7 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
     filename_resultImage = os.path.join(outputDir,'FLAIR_crop.nii.gz')
     sitk.WriteImage(sitk.GetImageFromArray(FLAIR_image_suitable), filename_resultImage )
     #   # T1 -----------------------------------------------
-    if rowcol_info["two_modalities"]:
+    if proc_params.two_modalities:
         brain_mask_T1[T1_image >= thresh] = 1
         brain_mask_T1[T1_image <  thresh] = 0
         for iii in range(np.shape(T1_image)[0]):
@@ -105,14 +125,14 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
     T1_image_suitable  = T1_image_suitable[..., np.newaxis]
 
 
-    rowcol_info["rhs_row_min"] = rhs_row_min
-    rowcol_info["rhs_row_max"] = rhs_row_max
-    rowcol_info["rhs_col_min"] = rhs_col_min
-    rowcol_info["rhs_col_max"] = rhs_col_max
-    rowcol_info["lhs_row_min"] = lhs_row_min
-    rowcol_info["lhs_row_max"] = lhs_row_max
-    rowcol_info["lhs_col_min"] = lhs_col_min
-    rowcol_info["lhs_col_max"] = lhs_col_max
+    proc_params.rhs_row_min = rhs_row_min
+    proc_params.rhs_row_max = rhs_row_max
+    proc_params.rhs_col_min = rhs_col_min
+    proc_params.rhs_col_max = rhs_col_max
+    proc_params.lhs_row_min = lhs_row_min
+    proc_params.lhs_row_max = lhs_row_max
+    proc_params.lhs_col_min = lhs_col_min
+    proc_params.lhs_col_max = lhs_col_max
 
     if two_modalities:
         imgs_two_channels = np.concatenate((FLAIR_image_suitable, T1_image_suitable), axis = 3)
@@ -121,7 +141,7 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
     else:
         return FLAIR_image_suitable, row_col_info
 
-def postprocessing(FLAIR_array, pred, rowcol_info):
+def postprocessing(FLAIR_array, pred, proc_params):
     start_slice = int(np.shape(FLAIR_array)[0]*per)
     num_o = np.shape(FLAIR_array)[1]  # original size
     rows_o = np.shape(FLAIR_array)[1]
@@ -129,14 +149,14 @@ def postprocessing(FLAIR_array, pred, rowcol_info):
     original_pred = np.zeros(np.shape(FLAIR_array), dtype=np.float32)
 #    import pdb; pdb.set_trace()
 
-    rhs_row_min = rowcol_info["rhs_row_min"]
-    rhs_row_max = rowcol_info["rhs_row_max"]
-    rhs_col_min = rowcol_info["rhs_col_min"]
-    rhs_col_max = rowcol_info["rhs_col_max"]
-    lhs_row_min = rowcol_info["lhs_row_min"]
-    lhs_row_min = rowcol_info["lhs_row_max"]
-    lhs_col_min = rowcol_info["lhs_col_min"]
-    lhs_col_max = rowcol_info["lhs_col_max"]
+    rhs_row_min = proc_params.rhs_row_min
+    rhs_row_max = proc_params.rhs_row_max
+    rhs_col_min = proc_params.rhs_col_min
+    rhs_col_max = proc_params.rhs_col_max
+    lhs_row_min = proc_params.lhs_row_min
+    lhs_row_min = proc_params.lhs_row_max
+    lhs_col_min = proc_params.lhs_col_min
+    lhs_col_max = proc_params.lhs_col_max
 
     original_pred[:, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max] = pred[:,lhs_row_min:lhs_row_max,lhs_col_min:lhs_col_max,0]
     original_pred[0: start_slice, ...] = 0
