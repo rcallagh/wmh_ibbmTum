@@ -100,4 +100,25 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
         T1_image_suitable[:, lhs_row_min:lhs_row_max, lhs_col_min:lhs_col_max] = T1_image[:, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max]
         filename_resultImage = os.path.join(outputDir,'T1_crop.nii.gz')
         sitk.WriteImage(sitk.GetImageFromArray(T1_image_suitable), filename_resultImage, imageIO="NiftiImageIO")
+    #---------------------------------------------------
+    FLAIR_image_suitable  = FLAIR_image_suitable[..., np.newaxis]
+    T1_image_suitable  = T1_image_suitable[..., np.newaxis]
+
+
+    rowcol_info["rhs_row_min"] = rhs_row_min
+    rowcol_info["rhs_row_max"] = rhs_row_max
+    rowcol_info["rhs_col_min"] = rhs_col_min
+    rowcol_info["rhs_col_max"] = rhs_col_max
+    rowcol_info["lhs_row_min"] = lhs_row_min
+    rowcol_info["lhs_row_max"] = lhs_row_max
+    rowcol_info["lhs_col_min"] = lhs_col_min
+    rowcol_info["lhs_col_max"] = lhs_col_max
+
+    if two_modalities:
+        imgs_two_channels = np.concatenate((FLAIR_image_suitable, T1_image_suitable), axis = 3)
+        print(np.shape(imgs_two_channels))
+        return imgs_two_channels, row_col_info
+    else:
+        return FLAIR_image_suitable, row_col_info
+
 def postprocessing(FLAIR_array, pred, rowcol_info):
