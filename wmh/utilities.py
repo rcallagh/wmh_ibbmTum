@@ -33,4 +33,8 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
 
         brain_mask_FLAIR[iii,:,:] = scipy.ndimage.morphology.binary_fill_holes(brain_mask_FLAIR[iii,:,:])  #fill the holes inside brain
 
+    #------Extract brain CoM
+    brain_CoM = scipy.ndimage.center_of_mass(brain_mask_FLAIR)
+    brain_CoM_row = int(brain_CoM[1])
+    brain_CoM_col = int(brain_CoM[2])
 def postprocessing(FLAIR_array, pred, rowcol_info):
