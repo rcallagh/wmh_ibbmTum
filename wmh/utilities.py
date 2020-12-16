@@ -122,3 +122,23 @@ def preprocessing(FLAIR_image, T1_image, rowcol_info):
         return FLAIR_image_suitable, row_col_info
 
 def postprocessing(FLAIR_array, pred, rowcol_info):
+    start_slice = int(np.shape(FLAIR_array)[0]*per)
+    num_o = np.shape(FLAIR_array)[1]  # original size
+    rows_o = np.shape(FLAIR_array)[1]
+    cols_o = np.shape(FLAIR_array)[2]
+    original_pred = np.zeros(np.shape(FLAIR_array), dtype=np.float32)
+#    import pdb; pdb.set_trace()
+
+    rhs_row_min = rowcol_info["rhs_row_min"]
+    rhs_row_max = rowcol_info["rhs_row_max"]
+    rhs_col_min = rowcol_info["rhs_col_min"]
+    rhs_col_max = rowcol_info["rhs_col_max"]
+    lhs_row_min = rowcol_info["lhs_row_min"]
+    lhs_row_min = rowcol_info["lhs_row_max"]
+    lhs_col_min = rowcol_info["lhs_col_min"]
+    lhs_col_max = rowcol_info["lhs_col_max"]
+
+    original_pred[:, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max] = pred[:,lhs_row_min:lhs_row_max,lhs_col_min:lhs_col_max,0]
+    original_pred[0: start_slice, ...] = 0
+    original_pred[(num_o-start_slice):num_o, ...] = 0
+    return original_pred
