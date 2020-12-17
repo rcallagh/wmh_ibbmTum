@@ -103,13 +103,15 @@ def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     FLAIR_image_suitable  = FLAIR_image_suitable[..., np.newaxis]
     T1_image_suitable  = T1_image_suitable[..., np.newaxis]
 
-
+    imgs_out = {}
+    imgs_out['FLAIR'] = FLAIR_image_suitable
     if proc_params.two_modalities:
-        imgs_two_channels = np.concatenate((FLAIR_image_suitable, T1_image_suitable), axis = 3)
-        print(np.shape(imgs_two_channels))
-        return imgs_two_channels, proc_params
-    else:
-        return FLAIR_image_suitable, proc_params
+        imgs_out['T1'] = T1_image_suitable
+
+    if gt_image is not None:
+        imgs_out['gt'] = gt_image_suitable
+
+    return imgs_out, proc_params
 
 def postprocessing(FLAIR_array, pred, proc_params):
     start_slice = int(np.shape(FLAIR_array)[0]*per)
