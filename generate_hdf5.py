@@ -51,9 +51,9 @@ class Dataset:
 
         for idx, current_subject in enumerate(self.subject_dirs):
 
-            # try:
+            try:
                 print("Volume Nr: {} Processing MRI Data from {}".format(idx, current_subject))
-
+                start = time.time()
                 FLAIR_image = sitk.ReadImage(join(current_subject, self.FLAIR_name), imageIO="NiftiImageIO")
                 FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
                 T1_image = []
@@ -62,6 +62,23 @@ class Dataset:
                     T1_image = sitk.ReadImage(join(current_subject, self.T1_name), imageIO="NiftiImageIO")
                     T1_array = sitk.GetArrayFromImage(T1_image)
                 gt_image = sitk.ReadImage(join(current_subject, self.gt_name), imageIO="NiftiImageIO")
+                gt_array = sitk.GetArrayFromImage(gt_image)
+                [images_preproc, self.proc_params] = preprocessing(FLAIR_array, T1_array, self.proc_params, gt_array)
+
+                image_dataset = np.append(image_dataset, np.concatenate((images_preproc["FLAIR"], images_preproc["T1"]), axis=3), axis=0)
+                gt_dataset = np.append(gt_dataset, images_preproc["gt"], axis = 0)
+                print(image_dataset.shape)
+
+
+                sub_name = current_subject.split("/")[-1]
+                subjects.append(sub_name.encode("ascii", "ignore"))
+
+                end = time.time() - start
+
+                print("Volume: {} Finished Data Reading and Appending in {:.3f} seconds.".format(idx, end))
+            except Exception as e:
+                print("Volume: {} Failed Reading Data. Error: {}".format(idx, e))
+                continue
 
                 preprocessing(FLAIR_array, T1_array, self.proc_params)
 
@@ -85,9 +102,9 @@ if __name__ == "__main__":
     parser.add_argument('--data_dir', type=str, default="./testsuite", help="Directory with images to load")
     parser.add_argument('--csv_file', type=str, default=None, help="Csv-file listing subjects to include in file")
     parser.add_argument('--pattern', type=str, default="10*", help="Pattern to match files in directory.")
-    parser.add_argument('--T1_name', type=str, default="T1/T1.nii.gz",
-                        help="Default name of T1 images. (default T1/T1.nii.gz)")
-    parser.add_argument('--FLAIR_name', type=str, default='T2_FLAIR/T2_FLAIR.nii.gz', help='Default name of T2FLAIR images. (default T2_FLAIR/T2_FLAIR)')
+    parser.add_argument('--T1_name', type=str, default="T1/T1_brain.nii.gz",
+                        help="Default name of T1 images. (default T1/T1_orig_defaced.nii.gz)")
+    parser.add_argument('--FLAIR_name', type=str, default='T2_FLAIR/T2_FLAIR_brain.nii.gz', help='Default name of T2FLAIR images. (default T2_FLAIR/T2_FLAIR)')
     parser.add_argument('--gt_name', type=str, default='T2_FLAIR/lesions/final_mask.nii.gz',help='Default name for ground truth segmentations (default T2_FLAIR/lesions/final_mask.nii.gz)')
 
     args = parser.parse_args()
