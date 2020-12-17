@@ -103,7 +103,7 @@ def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     FLAIR_image_suitable  = FLAIR_image_suitable[..., np.newaxis]
     T1_image_suitable  = T1_image_suitable[..., np.newaxis]
 
-    imgs_out = {}
+    imgs_out = {"FLAIR":None, "T1" :None, "gt":None}
     imgs_out['FLAIR'] = FLAIR_image_suitable
     if proc_params.two_modalities:
         imgs_out['T1'] = T1_image_suitable
