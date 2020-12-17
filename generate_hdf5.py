@@ -6,15 +6,34 @@ import glob
 import h5py
 import numpy as np
 import SimpleITK as sitk
-from wmh.utilities import preprocessing
+from os.path import join
+from wmh.utilities import preprocessing, ProcessingParams
 
 class Dataset:
     '''
     Class to load images and pre-process into hdf5 file
     '''
 
-    def __init__(self, params):
-        do = "something"
+    def __init__(self, data_args):
+        self.proc_params = ProcessingParams()
+        self.proc_params.updateFromArgs(data_args)
+        self.dataset_name = data_args.hdf5_name
+        self.data_path = data_args.data_dir
+        self.csv_file = data_args.csv_file
+        self.pattern = data_args.pattern
+        self.T1_name = data_args.T1_name
+        self.FLAIR_name = data_args.FLAIR_name
+        self.gt_name = data_args.gt_name
+
+        if self.csv_file is not None:
+            with open(self.csv_file, "r") as s_dirs:
+                self.subject_dirs = [line.strip() for line in s_dirs.readlines()]
+
+        else:
+            self.search_pattern = join(self.data_path, self.pattern)
+            self.subject_dirs = glob.glob(self.search_pattern)
+
+        self.data_set_size = len(self.subject_dirs)
 
 
 if __name__ == "__main__":
@@ -28,20 +47,19 @@ if __name__ == "__main__":
                         help='path and name of hdf5-dataset (default: testsuite_2.hdf5)')
     parser.add_argument('--rows_standard', type=int, default=200, help='Height of input to network (Default 200)')
     parser.add_argument('--cols_standard', type=int, default=200, help='Width of input to network (Default 200)')
-    parser.add_argument('--data_dir', type=str, default="/testsuite", help="Directory with images to load")
+    parser.add_argument('--data_dir', type=str, default="./testsuite", help="Directory with images to load")
     parser.add_argument('--csv_file', type=str, default=None, help="Csv-file listing subjects to include in file")
-    parser.add_argument('--pattern', type=str, help="Pattern to match files in directory.")
+    parser.add_argument('--pattern', type=str, default="10*", help="Pattern to match files in directory.")
     parser.add_argument('--T1_name', type=str, default="T1/T1.nii.gz",
                         help="Default name of T1 images. (default T1/T1.nii.gz)")
     parser.add_argument('--FLAIR_name', type=str, default='T2_FLAIR/T2_FLAIR.nii.gz', help='Default name of T2FLAIR images. (default T2_FLAIR/T2_FLAIR)')
     parser.add_argument('--gt_name', type=str, default='T2_FLAIR/lesions/final_mask.nii.gz',help='Default name for ground truth segmentations (default T2_FLAIR/lesions/final_mask.nii.gz)')
 
-
     args = parser.parse_args()
 
     network_params = {"dataset_name": args.hdf5_name, "rows_standard": args.rows_standard, "cols_standard": args.cols_standard,
-                      "data_path": args.data_dir, "csv_file": args.csv_file, "pattern": args.pattern, "T1_name": args.image_name,
+                      "data_path": args.data_dir, "csv_file": args.csv_file, "pattern": args.pattern, "T1_name": args.T1_name,
                       "gt_name": args.gt_name, "FLAIR_name": args.FLAIR_name}
 
-    stratified = PopulationDataset(network_params)
-    stratified.create_hdf5_dataset(plane=args.plane)
+    stratified = Dataset(args)
+    stratified.create_hdf5_dataset()
