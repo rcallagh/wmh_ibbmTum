@@ -35,6 +35,41 @@ class Dataset:
 
         self.data_set_size = len(self.subject_dirs)
 
+    def create_hdf5_dataset(self):
+        '''
+        Function to read in images, preprocess and store with hdf5 compression
+        '''
+        start_d = time.time()
+
+        # Arrays to store the data
+        gt_dataset = np.ndarray(shape=(0, self.proc_params.rows_standard, self.proc_params.cols_standard, 1), dtype='float32')
+        subjects = []
+        if self.proc_params.two_modalities:
+            image_dataset = np.ndarray(shape=(0, self.proc_params.rows_standard, self.proc_params.cols_standard, 2), dtype='float32')
+        else:
+            image_dataset = np.ndarray(shape=(0, self.proc_params.rows_standard, self.proc_params.cols_standard, 1), dtype='float32')
+
+        for idx, current_subject in enumerate(self.subject_dirs):
+
+            # try:
+                print("Volume Nr: {} Processing MRI Data from {}".format(idx, current_subject))
+
+                FLAIR_image = sitk.ReadImage(join(current_subject, self.FLAIR_name), imageIO="NiftiImageIO")
+                FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
+                T1_image = []
+                T1_array = []
+                if self.proc_params.two_modalities:
+                    T1_image = sitk.ReadImage(join(current_subject, self.T1_name), imageIO="NiftiImageIO")
+                    T1_array = sitk.GetArrayFromImage(T1_image)
+                gt_image = sitk.ReadImage(join(current_subject, self.gt_name), imageIO="NiftiImageIO")
+
+                preprocessing(FLAIR_array, T1_array, self.proc_params)
+
+            # except Exception as e:
+                # print("Volume: {} Failed Reading Data. Error: {}".format(idx, e))
+                # continue
+
+
 
 if __name__ == "__main__":
 
