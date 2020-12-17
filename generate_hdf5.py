@@ -80,11 +80,16 @@ class Dataset:
                 print("Volume: {} Failed Reading Data. Error: {}".format(idx, e))
                 continue
 
-                preprocessing(FLAIR_array, T1_array, self.proc_params)
+            # Write the hdf5 file
+        with h5py.File(self.dataset_name, "w") as hf:
+            hf.create_dataset('image_dataset', data=image_dataset, compression='gzip')
+            hf.create_dataset('gt_dataset', data=gt_dataset, compression='gzip')
 
-            # except Exception as e:
-                # print("Volume: {} Failed Reading Data. Error: {}".format(idx, e))
-                # continue
+            dt = h5py.special_dtype(vlen=str)
+            hf.create_dataset("subject", data=subjects, dtype=dt, compression="gzip")
+
+        end_d = time.time() - start_d
+        print("Successfully written {} in {:.3f} seconds.".format(self.dataset_name, end_d))
 
 
 
