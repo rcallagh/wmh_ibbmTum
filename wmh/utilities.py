@@ -27,13 +27,15 @@ class ProcessingParams:
         self.rows_standard = args.rows_standard
         self.cols_standard = args.cols_standard
 
-def preprocessing(FLAIR_image, T1_image, proc_params):
+def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     #  start_slice = 10
     channel_num = 2
     print(np.shape(FLAIR_image))
     num_selected_slice = FLAIR_image.shape[0]
     FLAIR_image = np.float32(FLAIR_image)
     T1_image = np.float32(T1_image)
+    if gt_image is not None:
+        gt_image = np.float32(gt_image)
 
     brain_mask_FLAIR = np.ndarray((np.shape(FLAIR_image)[0],FLAIR_image.shape[1], FLAIR_image.shape[2]), dtype=np.float32)
     brain_mask_T1 = np.ndarray(T1_image.shape, dtype=np.float32)
@@ -41,6 +43,8 @@ def preprocessing(FLAIR_image, T1_image, proc_params):
     imgs_mask_two_channels = np.ndarray((num_selected_slice, proc_params.rows_standard, proc_params.cols_standard,1), dtype=np.float32)
     FLAIR_image_suitable = np.ndarray((num_selected_slice, proc_params.rows_standard, proc_params.cols_standard), dtype=np.float32)
     T1_image_suitable = np.ndarray((num_selected_slice, proc_params.rows_standard, proc_params.cols_standard), dtype=np.float32)
+    if gt_image is not None:
+        gt_image_suitable = np.ndarray((num_selected_slice, proc_params.rows_standard, proc_params.cols_standard), dtype=np.float32)
 
     # FLAIR --------------------------------------------
     brain_mask_FLAIR[FLAIR_image >= proc_params.thresh_FLAIR] = 1
@@ -92,6 +96,10 @@ def preprocessing(FLAIR_image, T1_image, proc_params):
         # filename_resultImage = os.path.join(outputDir,'T1_crop.nii.gz')
         # sitk.WriteImage(sitk.GetImageFromArray(T1_image_suitable), filename_resultImage, imageIO="NiftiImageIO")
     #---------------------------------------------------
+    if gt_image is not None:
+        gt_image_suitable[:, lhs_row_min:lhs_row_max, lhs_col_min:lhs_col_max] = gt_image[:, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max]
+        gt_image_suitable = gt_image_suitable[..., np.newaxis]
+
     FLAIR_image_suitable  = FLAIR_image_suitable[..., np.newaxis]
     T1_image_suitable  = T1_image_suitable[..., np.newaxis]
 
