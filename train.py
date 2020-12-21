@@ -2,8 +2,9 @@
 
 import os
 import numpy as np
-import tensorflow as tf
-import difflib
+# import tensorflow as tf
+import warnings
+import h5py
 import SimpleITK as sitk
 import scipy.spatial
 from keras.models import Model
@@ -84,11 +85,13 @@ def main():
     parser.add_argument('--hdf5_name_train', type=str, default="test_train.hdf5", help='path and name of hdf5-dataset for training (default: test_train.hdf5)')
     parser.add_argument('--hdf5_name_test', type=str, default="test_test.hdf5", help='path and name of hdf5-dataset for testing (default: test_test.hdf5)')
     parser.add_argument('--validation_split', type=float, default=0.2, help='Fraction of data for validation. Will be overridden by hdf5_name_test for explicit validation set. (default: 0.2)')
-    parser.add_argument('--batch_size', type=int, default=16, metavar='N', help='input batch size for training (default: 16)')
-    parser.add_argument('--validation_batch_size', type=int, default=16, metavar='N',help='input batch size for validation (default: 16)')
+    parser.add_argument('--batch_size', type=int, default=30, metavar='N', help='input batch size for training (default: 30)')
+    parser.add_argument('--validation_batch_size', type=int, default=30, metavar='N',help='input batch size for validation (default: 30)')
+    parser.add_argument('--epochs', type=int, default=50, help='Number of epochs (default: 50)')
+    parser.add_argument('--verbose', action='store_true', help='Flag to use verbose training')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
     parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
-    parser.add_argument('--two_modalities', action='store_true', help='Flag whether using both T1 and FLAIR or just FLAIR (default (if flag not provided): just use FLAIR)')
+    parser.add_argument('--flair_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
     parser.add_argument('--no_aug', action='store_true', help="Flag to not do any augmentation")
     parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
     parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
