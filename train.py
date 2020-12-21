@@ -13,6 +13,9 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 from wmh.model import get_unet
 
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
 
 def train(args):
     #Load in training dataset
