@@ -150,40 +150,59 @@ def setCroppingParams(proc_params, image_shape):
     brain_CoM_row = int(proc_params.brain_CoM[1])
     brain_CoM_col = int(proc_params.brain_CoM[2])
 
+
+    row_offset = int(rows_standard/2 - brain_CoM_row)
+    col_offset = int(cols_standard/2 - brain_CoM_col)
+    row_offset = 0
+    col_offset = 0
+
     if rows_to_shrink:
         lhs_row_min = 0;
         lhs_row_max = rows_standard;
 
-        row_offset = int(brain_CoM_row - rows_standard/2)
-        if (row_offset + rows_standard/2) > image_rows_Dataset/2:
-            row_offset -= int(row_offset + rows_standard/2 - image_rows_Dataset/2)
+        rhs_row_min = int(0.5 * (image_rows_Dataset - rows_standard)) - row_offset
+        rhs_row_max = int(0.5 * (image_rows_Dataset + rows_standard)) - row_offset
 
-        rhs_row_min = int(image_rows_Dataset/2-rows_standard/2 + row_offset);
-        rhs_row_max = int(image_rows_Dataset/2+rows_standard/2 + row_offset);
+        if rhs_row_min < 0:
+            overstep = -rhs_row_min
+            rhs_row_min = 0
+            lhs_row_max -= overstep
 
     else:
-#        import pdb; pdb.set_trace()
-        lhs_row_min = int(rows_standard/2 - image_rows_Dataset/2)
-        lhs_row_max = int(rows_standard/2 + image_rows_Dataset/2)
+        lhs_row_min = int(0.5 * (rows_standard - image_rows_Dataset)) + row_offset
+        lhs_row_max = int(0.5 * (rows_standard + image_rows_Dataset)) + row_offset
         rhs_row_min = 0
         rhs_row_max = image_rows_Dataset
+
+        if lhs_row_max > rows_standard:
+            overstep = lhs_row_max - rows_standard
+            lhs_row_max = rows_standard
+            rhs_row_min += overstep
+
 
     if cols_to_shrink:
         lhs_col_min = 0
         lhs_col_max = cols_standard
 
-        col_offset = int(brain_CoM_col - cols_standard/2)
-        if (col_offset + cols_standard/2) > image_cols_Dataset/2:
-            col_offset -= int(col_offset + cols_standard/2 - image_cols_Dataset/2)
+        rhs_col_min = int(0.5 * (images_cols_Dataset - cols_standard)) - col_offset
+        rhs_col_max = int(0.5 * (images_cols_Dataset + cols_standard)) - col_offset
 
-        rhs_col_min = int(image_cols_Dataset/2-cols_standard/2 + col_offset)
-        rhs_col_max = int(image_cols_Dataset/2+cols_standard/2 + col_offset)
+        if rhs_col_min < 0:
+            overstep = -rhs_col_min
+            rhs_col_min = 0
+            lhs_col_max -= ovestep
+
 
     else:
-        lhs_col_min = int(cols_standard/2-image_cols_Dataset/2)
-        lhs_col_max = int(cols_standard/2+image_cols_Dataset/2)
+        lhs_col_min = int(0.5 * (cols_standard - image_cols_Dataset)) + col_offset
+        lhs_col_max = int(0.5 * (cols_standard + image_cols_Dataset)) + col_offset
         rhs_col_min = 0
         rhs_col_max = image_cols_Dataset
+
+        if lhs_col_max > cols_standard:
+            overstep = lhs_col_max - cols_standard
+            lhs_col_max = cols_standard
+            rhs_col_min += overstep
 
     proc_params.rhs_row_min = rhs_row_min
     proc_params.rhs_row_max = rhs_row_max
