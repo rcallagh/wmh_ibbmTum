@@ -21,11 +21,11 @@ def do():
     h95 = getHausdorff(testImage, resultImage)
     avd = getAVD(testImage, resultImage)    
     recall, f1 = getLesionDetection(testImage, resultImage)    
-    print 'Dice',                dsc,       '(higher is better, max=1)'
-    print 'HD',                  h95, 'mm',  '(lower is better, min=0)'
-    print 'AVD',                 avd,  '%',  '(lower is better, min=0)'
-    print 'Lesion detection', recall,       '(higher is better, max=1)'
-    print 'Lesion F1',            f1,       '(higher is better, max=1)'
+    print ('Dice',                dsc,       '(higher is better, max=1)')
+    print ('HD',                  h95, 'mm',  '(lower is better, min=0)')
+    print ('AVD',                 avd,  '%',  '(lower is better, min=0)')
+    print ('Lesion detection', recall,       '(higher is better, max=1)')
+    print ('Lesion F1',            f1,       '(higher is better, max=1)')
     
 
 def getImages(testFilename, resultFilename):
