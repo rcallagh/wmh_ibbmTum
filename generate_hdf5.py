@@ -40,7 +40,7 @@ class Dataset:
         Function to read in images, preprocess and store with hdf5 compression
         '''
         start_d = time.time()
-
+        num_skipped = 0;
         # Arrays to store the data
         gt_dataset = np.ndarray(shape=(0, self.proc_params.rows_standard, self.proc_params.cols_standard, 1), dtype='float32')
         subjects = []
@@ -78,6 +78,7 @@ class Dataset:
                 print("Volume: {} Finished Data Reading and Appending in {:.3f} seconds.".format(idx, end))
             except Exception as e:
                 print("Volume: {} Failed Reading Data. Error: {}".format(idx, e))
+                num_skipped += 1;
                 continue
 
             # Write the hdf5 file
@@ -89,7 +90,8 @@ class Dataset:
             hf.create_dataset("subject", data=subjects, dtype=dt, compression="gzip")
 
         end_d = time.time() - start_d
-        print("Successfully written {} in {:.3f} seconds.".format(self.dataset_name, end_d))
+        print("Successfully written {} subjects in {} in {:.3f} seconds.".format(len(self.subject_dirs)-num_skipped, self.dataset_name, end_d))
+        print("Number of subjects skipped due to missing data/errors: {}".format(num_skipped))
 
 
 
