@@ -108,7 +108,7 @@ if __name__ == "__main__":
     parser.add_argument('--csv_file', type=str, default=None, help="Csv-file listing subjects to include in file")
     parser.add_argument('--pattern', type=str, default="10*", help="Pattern to match files in directory.")
     parser.add_argument('--T1_name', type=str, default="T1/T1_brain.nii.gz",
-                        help="Default name of T1 images. (default T1/T1_orig_defaced.nii.gz)")
+                        help="Default name of T1 images. (default T1/T1_brain.nii.gz)")
     parser.add_argument('--FLAIR_name', type=str, default='T2_FLAIR/T2_FLAIR_brain.nii.gz', help='Default name of T2FLAIR images. (default T2_FLAIR/T2_FLAIR)')
     parser.add_argument('--gt_name', type=str, default='T2_FLAIR/lesions/final_mask.nii.gz',help='Default name for ground truth segmentations (default T2_FLAIR/lesions/final_mask.nii.gz)')
 
