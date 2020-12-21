@@ -171,7 +171,7 @@ def train_leave_one_out(images, masks, patient=0, flair=True, t1=True, full=True
     model = get_unet(img_shape, first5)
     current_epoch = 1
     while current_epoch <= epoch:
-        print 'Epoch ', str(current_epoch), '/', str(epoch)
+        # print 'Epoch ', str(current_epoch), '/', str(epoch)
         if aug:
             images_aug = np.zeros(images.shape, dtype=np.float32)
             masks_aug = np.zeros(masks.shape, dtype=np.float32)
@@ -211,6 +211,23 @@ def train_leave_one_out(images, masks, patient=0, flair=True, t1=True, full=True
 
 #leave-one-out evaluation
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='WMH training')
+
+    parser.add_argument('--hdf5_name_train', type=str, default="testsuite_2.hdf5", help='path and name of hdf5-dataset for training (default: testsuite_2.hdf5)')
+    parser.add_argument('--hdf5_name_test', type=str, default=None, help='path and name of hdf5-dataset for testing/validation (default: None)')
+    parser.add_argument('--validation_split', type=float, default=0.2, help='Fraction of data for validation. Will be overridden by hdf5_name_test for explicit validation set. (default: 0.2)')
+    parser.add_argument('--batch_size', type=int, default=16, metavar='N', help='input batch size for training (default: 16)')
+    parser.add_argument('--validation_batch_size', type=int, default=16, metavar='N',help='input batch size for validation (default: 16)')
+    parser.add_argument('--model_dir', type=str, default='./wmh/weights', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
+    parser.add_argument('--resume', type='store_true', help='Flag to resume training from checkpoints.')
+    parser.add_argument('--two_modalities', type='store_true', help='Flag whether using both T1 and FLAIR or just FLAIR (default (if flag not provided): just use FLAIR)')
+    parser.add_argument('--no_aug', type='store_true', help="Flag to not do any augmentation")
+    parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
+    parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
+
+    args = parser.parse_args()
+
     warnings.filterwarnings("ignore")
     images = np.load('images_three_datasets_sorted.npy')
     masks = np.load('masks_three_datasets_sorted.npy')
