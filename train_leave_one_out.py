@@ -1,11 +1,12 @@
 #Codes for validating the WMH Segmetation Challenge public training Datasets. The algorithm won the MICCAI WMH Segmentation Challenge 2017.
 #Codes are written by Mr. Hongwei Li (hongwei.li@tum.de) and Mr. Gongfa Jiang (jianggfa@mail2.sysu.edu.cn). They are PhD students in Technical University of Munich and Sun Yat-sen University.
 #Please cite our paper titled 'Fully Convolutional Networks Ensembles for White Matter Hyperintensities Segmentation in MR Images' if you found it is useful to your research.
-#Please contact me if there is any bug you want to report or any details you would like to know. 
+#Please contact me if there is any bug you want to report or any details you would like to know.
 
 import os
 import time
 import numpy as np
+import h5py
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, Cropping2D, ZeroPadding2D, BatchNormalization, Activation
@@ -13,7 +14,7 @@ from keras.layers.merge import concatenate
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from keras import backend as K
-from keras.preprocessing.image import apply_transform, transform_matrix_offset_center
+from keras.preprocessing.image import ImageDataGenerator
 import warnings
 K.set_image_data_format('channels_last')
 
@@ -114,26 +115,31 @@ def get_unet(img_shape = None, first5=True):
 
 def augmentation(x_0, x_1, y):
     theta = (np.random.uniform(-15, 15) * np.pi) / 180.
-    rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
-                                [np.sin(theta), np.cos(theta), 0],
-                                [0, 0, 1]])
-    shear = np.random.uniform(-.1, .1)
-    shear_matrix = np.array([[1, -np.sin(shear), 0],
-                             [0, np.cos(shear), 0],
-                             [0, 0, 1]])
-    zx, zy = np.random.uniform(.9, 1.1, 2)
-    zoom_matrix = np.array([[zx, 0, 0],
-                            [0, zy, 0],
-                            [0, 0, 1]])
-    augmentation_matrix = np.dot(np.dot(rotation_matrix, shear_matrix), zoom_matrix)
-    transform_matrix = transform_matrix_offset_center(augmentation_matrix, x_0.shape[0], x_0.shape[1])
-    x_0 = apply_transform(x_0[..., np.newaxis], transform_matrix, channel_axis=2)
-    x_1 = apply_transform(x_1[..., np.newaxis], transform_matrix, channel_axis=2)
-    y = apply_transform(y[..., np.newaxis], transform_matrix, channel_axis=2)
-    return x_0[..., 0], x_1[..., 0], y[..., 0]
+#     rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
+#                                 [np.sin(theta), np.cos(theta), 0],
+#                                 [0, 0, 1]])
+#     shear = np.random.uniform(-.1, .1)
+#     shear_matrix = np.array([[1, -np.sin(shear), 0],
+#                              [0, np.cos(shear), 0],
+#                              [0, 0, 1]])
+#     zx, zy = np.random.uniform(.9, 1.1, 2)
+#     zoom_matrix = np.array([[zx, 0, 0],
+#                             [0, zy, 0],
+#                             [0, 0, 1]])
+#     augmentation_matrix = np.dot(np.dot(rotation_matrix, shear_matrix), zoom_matrix)
+#     transform_matrix = transform_matrix_offset_center(augmentation_matrix, x_0.shape[0], x_0.shape[1])
+#     x_0 = apply_transform(x_0[..., np.newaxis], transform_matrix, channel_axis=2)
+#     x_1 = apply_transform(x_1[..., np.newaxis], transform_matrix, channel_axis=2)
+#     y = apply_transform(y[..., np.newaxis], transform_matrix, channel_axis=2)
+#     return x_0[..., 0], x_1[..., 0], y[..., 0]
 
 #train single model on the training set
-def train_leave_one_out(images, masks, patient=0, flair=True, t1=True, full=True, first5=True, aug=True, verbose=False):
+def train_leave_one_out(args, images=None, masks=None, patient=0, flair=True, t1=True, full=True, first5=True, aug=True, verbose=False):
+    f = h5py.File(args.hdf5_name_train)
+    images = f['image_dataset']
+    masks = f['gt_dataset']
+    subject = f['subject']
+    import pdb; pdb.set_trace()
     if full:
         if patient < 40:
             images = np.delete(images, range(patient*38, (patient+1)*38), axis=0)
@@ -160,6 +166,12 @@ def train_leave_one_out(images, masks, patient=0, flair=True, t1=True, full=True
     if aug:
         images = np.concatenate((images, images[..., ::-1, :]), axis=0)
         masks = np.concatenate((masks, masks[..., ::-1, :]), axis=0)
+
+    img_gen = ImageDataGenerator(
+        rotation_range=15,
+        zoom_range=0.1,
+        shear_range=18,
+    )
     samples_num = images.shape[0]
     row = images.shape[1]
     col = images.shape[2]
@@ -207,7 +219,7 @@ def train_leave_one_out(images, masks, patient=0, flair=True, t1=True, full=True
         os.mkdir(model_path)
     model_path += str(patient) + '.h5'
     model.save_weights(model_path)
-    print 'Model saved to ', model_path
+    print('Model saved to ', model_path)
 
 #leave-one-out evaluation
 def main():
@@ -215,25 +227,25 @@ def main():
     parser = argparse.ArgumentParser(description='WMH training')
 
     parser.add_argument('--hdf5_name_train', type=str, default="testsuite_2.hdf5", help='path and name of hdf5-dataset for training (default: testsuite_2.hdf5)')
-    parser.add_argument('--hdf5_name_test', type=str, default=None, help='path and name of hdf5-dataset for testing/validation (default: None)')
+    parser.add_argument('--hdf5_name_test', type=str, default="", help='path and name of hdf5-dataset for testing/validation (default: None)')
     parser.add_argument('--validation_split', type=float, default=0.2, help='Fraction of data for validation. Will be overridden by hdf5_name_test for explicit validation set. (default: 0.2)')
     parser.add_argument('--batch_size', type=int, default=16, metavar='N', help='input batch size for training (default: 16)')
     parser.add_argument('--validation_batch_size', type=int, default=16, metavar='N',help='input batch size for validation (default: 16)')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
-    parser.add_argument('--resume', type='store_true', help='Flag to resume training from checkpoints.')
-    parser.add_argument('--two_modalities', type='store_true', help='Flag whether using both T1 and FLAIR or just FLAIR (default (if flag not provided): just use FLAIR)')
-    parser.add_argument('--no_aug', type='store_true', help="Flag to not do any augmentation")
+    parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
+    parser.add_argument('--two_modalities', action='store_true', help='Flag whether using both T1 and FLAIR or just FLAIR (default (if flag not provided): just use FLAIR)')
+    parser.add_argument('--no_aug', action='store_true', help="Flag to not do any augmentation")
     parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
     parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
 
     args = parser.parse_args()
 
     warnings.filterwarnings("ignore")
-    images = np.load('images_three_datasets_sorted.npy')
-    masks = np.load('masks_three_datasets_sorted.npy')
+    # images = np.load('images_three_datasets_sorted.npy')
+    # masks = np.load('masks_three_datasets_sorted.npy')
     patient_num  = 60
     for patient in range(0, patient_num):
-        train_leave_one_out(images, masks, patient=patient, full=True, verbose=True)
+        train_leave_one_out(args)
 
 if __name__=='__main__':
     main()
