@@ -15,13 +15,14 @@ from wmh.model import get_unet
 
 
 def train(args):
+    #Load in training dataset
     f = h5py.File(args.hdf5_name_train)
     images = f['image_dataset']
     masks = f['gt_dataset']
     subject = f['subject']
-    import pdb; pdb.set_trace()
 
-    if ars.no_aug:
+    #Set up on the fly augmentation
+    if args.no_aug:
         img_gen = ImageDataGenerator()
     else:
         img_gen = ImageDataGenerator(
@@ -29,35 +30,24 @@ def train(args):
             zoom_range=0.1,
             shear_range=18,
         )
+
+    num_channel = 2
+    if args.flair_only:
+        num_channel = 1
+
     samples_num = images.shape[0]
     row = images.shape[1]
     col = images.shape[2]
-    if aug: epoch = 50
-    else: epoch = 200
-    batch_size = 30
 
-    img_shape = (row, col, flair+t1)
-    model = get_unet(img_shape, first5)
+    img_shape = (row, col, num_channel)
+    model = get_unet(img_shape)
     current_epoch = 1
-    while current_epoch <= epoch:
-        # print 'Epoch ', str(current_epoch), '/', str(epoch)
-        if aug:
-            images_aug = np.zeros(images.shape, dtype=np.float32)
-            masks_aug = np.zeros(masks.shape, dtype=np.float32)
-            for i in range(samples_num):
-                images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[i, ..., 0], images[i, ..., 1], masks[i, ..., 0])
-            image = np.concatenate((images, images_aug), axis=0)
-            mask = np.concatenate((masks, masks_aug), axis=0)
-        else:
-            image = images.copy()
-            mask = masks.copy()
-        if not flair: image = image[..., 1:2].copy()
-        if not t1: image = image[..., 0:1].copy()
-        history = model.fit(image, mask, batch_size=batch_size, epochs=1, verbose=verbose, shuffle=True)
-        current_epoch += 1
-        if history.history['loss'][-1] > 0.99:
-            model = get_unet(img_shape, first5)
-            current_epoch = 1
+    bs = args.batch_size
+    epochs = args.epochs
+    verbose = args.verbose
+    import pdb; pdb.set_trace()
+    history = model.fit(img_gen.flow(images, masks, batch_size=bs), steps_per_epoch=samples_num / bs, epochs=epochs, verbose=verbose, shuffle=True)
+
     model_path = 'models/'
     if not os.path.exists(model_path):
         os.mkdir(model_path)
