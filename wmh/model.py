@@ -7,7 +7,7 @@ import difflib
 import SimpleITK as sitk
 import scipy.spatial
 from keras.models import Model
-from keras.layers import Input, merge, Convolution2D, MaxPooling2D, UpSampling2D, Cropping2D, ZeroPadding2D
+from keras.layers import Input, concatenate, Convolution2D, MaxPooling2D, UpSampling2D, Cropping2D, ZeroPadding2D
 from keras.optimizers import Adam
 from evaluation import getDSC, getHausdorff, getLesionDetection, getAVD, getImages  #please download evaluation.py from the WMH website
 from keras.callbacks import ModelCheckpoint
@@ -21,6 +21,7 @@ def dice_coef_for_training(y_true, y_pred):
     y_pred_f = K.flatten(y_pred)
     intersection = K.sum(y_true_f * y_pred_f)
     return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+
 def dice_coef_loss(y_true, y_pred):
     print(np.shape(y_pred))
     print(np.shape(y_true))
@@ -72,28 +73,28 @@ def get_unet(img_shape = None):
         up_conv5 = UpSampling2D(size=(2, 2), dim_ordering=dim_ordering)(conv5)
         ch, cw = get_crop_shape(conv4, up_conv5)
         crop_conv4 = Cropping2D(cropping=(ch,cw), dim_ordering=dim_ordering)(conv4)
-        up6 = merge([up_conv5, crop_conv4], mode='concat', concat_axis=concat_axis)
+        up6 = concatenate([up_conv5, crop_conv4], axis=concat_axis)
         conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same', dim_ordering=dim_ordering)(up6)
         conv6 = Convolution2D(256, 3, 3, activation='relu', border_mode='same', dim_ordering=dim_ordering)(conv6)
 
         up_conv6 = UpSampling2D(size=(2, 2), dim_ordering=dim_ordering)(conv6)
         ch, cw = get_crop_shape(conv3, up_conv6)
         crop_conv3 = Cropping2D(cropping=(ch,cw), dim_ordering=dim_ordering)(conv3)
-        up7 = merge([up_conv6, crop_conv3], mode='concat', concat_axis=concat_axis)
+        up7 = concatenate([up_conv6, crop_conv3], axis=concat_axis)
         conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same', dim_ordering=dim_ordering)(up7)
         conv7 = Convolution2D(128, 3, 3, activation='relu', border_mode='same', dim_ordering=dim_ordering)(conv7)
 
         up_conv7 = UpSampling2D(size=(2, 2), dim_ordering=dim_ordering)(conv7)
         ch, cw = get_crop_shape(conv2, up_conv7)
         crop_conv2 = Cropping2D(cropping=(ch,cw), dim_ordering=dim_ordering)(conv2)
-        up8 = merge([up_conv7, crop_conv2], mode='concat', concat_axis=concat_axis)
+        up8 = concatenate([up_conv7, crop_conv2], axis=concat_axis)
         conv8 = Convolution2D(96, 3, 3, activation='relu', border_mode='same', dim_ordering=dim_ordering)(up8)
         conv8 = Convolution2D(96, 3, 3, activation='relu', border_mode='same', dim_ordering=dim_ordering)(conv8)
 
         up_conv8 = UpSampling2D(size=(2, 2), dim_ordering=dim_ordering)(conv8)
         ch, cw = get_crop_shape(conv1, up_conv8)
         crop_conv1 = Cropping2D(cropping=(ch,cw), dim_ordering=dim_ordering)(conv1)
-        up9 = merge([up_conv8, crop_conv1], mode='concat', concat_axis=concat_axis)
+        up9 = concatenate([up_conv8, crop_conv1], axis=concat_axis)
         conv9 = Convolution2D(64, 3, 3, activation='relu', border_mode='same', dim_ordering=dim_ordering)(up9)
         conv9 = Convolution2D(64, 3, 3, activation='relu', border_mode='same', dim_ordering=dim_ordering)(conv9)
 
