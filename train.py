@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+
+import os
+import numpy as np
+import tensorflow as tf
+import difflib
+import SimpleITK as sitk
+import scipy.spatial
+from keras.models import Model
+from keras.optimizers import Adam
+from keras.preprocessing.image import ImageDataGenerator
+from keras import backend as K
+from wmh.model import get_unet
+
+
+def train(args):
+    f = h5py.File(args.hdf5_name_train)
+    images = f['image_dataset']
+    masks = f['gt_dataset']
+    subject = f['subject']
+    import pdb; pdb.set_trace()
+
+    if ars.no_aug:
+        img_gen = ImageDataGenerator()
+    else:
+        img_gen = ImageDataGenerator(
+            rotation_range=15,
+            zoom_range=0.1,
+            shear_range=18,
+        )
+    samples_num = images.shape[0]
+    row = images.shape[1]
+    col = images.shape[2]
+    if aug: epoch = 50
+    else: epoch = 200
+    batch_size = 30
+
+    img_shape = (row, col, flair+t1)
+    model = get_unet(img_shape, first5)
+    current_epoch = 1
+    while current_epoch <= epoch:
+        # print 'Epoch ', str(current_epoch), '/', str(epoch)
+        if aug:
+            images_aug = np.zeros(images.shape, dtype=np.float32)
+            masks_aug = np.zeros(masks.shape, dtype=np.float32)
+            for i in range(samples_num):
+                images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[i, ..., 0], images[i, ..., 1], masks[i, ..., 0])
+            image = np.concatenate((images, images_aug), axis=0)
+            mask = np.concatenate((masks, masks_aug), axis=0)
+        else:
+            image = images.copy()
+            mask = masks.copy()
+        if not flair: image = image[..., 1:2].copy()
+        if not t1: image = image[..., 0:1].copy()
+        history = model.fit(image, mask, batch_size=batch_size, epochs=1, verbose=verbose, shuffle=True)
+        current_epoch += 1
+        if history.history['loss'][-1] > 0.99:
+            model = get_unet(img_shape, first5)
+            current_epoch = 1
+    model_path = 'models/'
+    if not os.path.exists(model_path):
+        os.mkdir(model_path)
+    if full: model_path += 'Full_'
+    else:
+        if patient < 20: model_path += 'Utrecht_'
+        elif patient < 40: model_path += 'Singapore_'
+        else: model_path += 'GE3T_'
+    if flair: model_path += 'Flair_'
+    if t1: model_path += 'T1_'
+    if first5: model_path += '5_'
+    else: model_path += '3_'
+    if aug: model_path += 'Augmentation/'
+    else: model_path += 'No_Augmentation/'
+    if not os.path.exists(model_path):
+        os.mkdir(model_path)
+    model_path += str(patient) + '.h5'
+    model.save_weights(model_path)
+    print('Model saved to ', model_path)
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='WMH training')
+
+    parser.add_argument('--hdf5_name_train', type=str, default="test_train.hdf5", help='path and name of hdf5-dataset for training (default: test_train.hdf5)')
+    parser.add_argument('--hdf5_name_test', type=str, default="test_test.hdf5", help='path and name of hdf5-dataset for testing (default: test_test.hdf5)')
+    parser.add_argument('--validation_split', type=float, default=0.2, help='Fraction of data for validation. Will be overridden by hdf5_name_test for explicit validation set. (default: 0.2)')
+    parser.add_argument('--batch_size', type=int, default=16, metavar='N', help='input batch size for training (default: 16)')
+    parser.add_argument('--validation_batch_size', type=int, default=16, metavar='N',help='input batch size for validation (default: 16)')
+    parser.add_argument('--model_dir', type=str, default='./wmh/weights', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
+    parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
+    parser.add_argument('--two_modalities', action='store_true', help='Flag whether using both T1 and FLAIR or just FLAIR (default (if flag not provided): just use FLAIR)')
+    parser.add_argument('--no_aug', action='store_true', help="Flag to not do any augmentation")
+    parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
+    parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
+
+    args = parser.parse_args()
+
+    warnings.filterwarnings("ignore")
+    # images = np.load('images_three_datasets_sorted.npy')
+    # masks = np.load('masks_three_datasets_sorted.npy')
+    train(args)
+
+if __name__=='__main__':
+    main()
