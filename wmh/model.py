@@ -10,7 +10,6 @@ from keras.models import Model, load_model
 from keras.layers import Input, concatenate, Conv2D, MaxPooling2D, UpSampling2D, Cropping2D, ZeroPadding2D
 from keras.optimizers import Adam
 from evaluation import getDSC, getHausdorff, getLesionDetection, getAVD, getImages  #please download evaluation.py from the WMH website
-from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 import h5py
 

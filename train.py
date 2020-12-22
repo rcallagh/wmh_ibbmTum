@@ -10,6 +10,7 @@ import scipy.spatial
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 from wmh.model import get_unet
 from time import strftime
