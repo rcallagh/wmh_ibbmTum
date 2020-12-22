@@ -12,13 +12,14 @@ from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 from wmh.model import get_unet
+from time import strftime
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
 ###################################
 # TensorFlow wizardry
-config = tf.ConfigProto()
+config = tf.compat.v1.ConfigProto()
 
 # Don't pre-allocate memory; allocate as-needed
 config.gpu_options.allow_growth = True
@@ -27,11 +28,11 @@ config.gpu_options.allow_growth = True
 config.gpu_options.per_process_gpu_memory_fraction = 1.0
 
 # Create a session with the above options specified.
-K.tensorflow_backend.set_session(tf.Session(config=config))
+K.tensorflow_backend.set_session(tf.compat.v1.Session(config=config))
 ###################################
 
 
-def train(args):
+def train(args, i_network):
     #Load in training dataset
     f = h5py.File(args.hdf5_name_train)
     images = f['image_dataset']
@@ -49,6 +50,16 @@ def train(args):
             validation_split=0.2
         )
 
+    #If resuming, set up path to load in previous state
+    weight_path = None
+    if args.resume:
+        #Back up previous checkpoint/weights
+        weight_str = os.path.join(args.model_dir,str(i_network))
+        os.popen('cp {}.h5 {}_orig_{}.h5'.format(weight_str, weight_str, strftime('%d-%m-%y_%H%M')))
+
+        weight_path = os.path.join(args.model_dir,str(i_network)) + '.h5'
+
+
     num_channel = 2
     if args.flair_only:
         num_channel = 1
@@ -56,17 +67,18 @@ def train(args):
     samples_num = images.shape[0]
     row = images.shape[1]
     col = images.shape[2]
-
     img_shape = (row, col, num_channel)
-    model = get_unet(img_shape)
+
+    #Get the unet. If weight path provided this will load in previous state
+    model = get_unet(img_shape, weight_path)
     current_epoch = 1
     bs = args.batch_size
     epochs = args.epochs
     verbose = args.verbose
-
-    train_gen = img_gen.flow(images, masks, batch_size=bs, subset='training')
-    validation_gen = img_gen.flow(images, masks, batch_size=bs, subset='validation')
     import pdb; pdb.set_trace()
+    train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
+    validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
+
     history = model.fit(
         train_gen,
         steps_per_epoch=len(train_gen) / bs,
@@ -76,25 +88,19 @@ def train(args):
         verbose=verbose
     )
 
-    model_path = 'models/'
+    model_path = args.model_dir
     if not os.path.exists(model_path):
         os.mkdir(model_path)
-    if full: model_path += 'Full_'
-    else:
-        if patient < 20: model_path += 'Utrecht_'
-        elif patient < 40: model_path += 'Singapore_'
-        else: model_path += 'GE3T_'
-    if flair: model_path += 'Flair_'
-    if t1: model_path += 'T1_'
-    if first5: model_path += '5_'
-    else: model_path += '3_'
-    if aug: model_path += 'Augmentation/'
-    else: model_path += 'No_Augmentation/'
-    if not os.path.exists(model_path):
-        os.mkdir(model_path)
-    model_path += str(patient) + '.h5'
+    import pdb; pdb.set_trace()
+
+
+
+    model_path += str(i_network) + '.h5'
     model.save_weights(model_path)
+    model.save(model_path)
     print('Model saved to ', model_path)
+
+    f.close()
 
 def main():
     import argparse
@@ -113,13 +119,16 @@ def main():
     parser.add_argument('--no_aug', action='store_true', help="Flag to not do any augmentation")
     parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
     parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
+    parser.add_argument('--test_ensemble', action='store_true', help='Flag to test the overall ensemble performance once all networks are trained')
 
     args = parser.parse_args()
 
     warnings.filterwarnings("ignore")
     # images = np.load('images_three_datasets_sorted.npy')
     # masks = np.load('masks_three_datasets_sorted.npy')
-    train(args)
+    i_start = args.num_unet_start
+    for i_net in range(i_start, i_start + args.num_unet):
+        train(args, i_net)
 
 if __name__=='__main__':
     main()
