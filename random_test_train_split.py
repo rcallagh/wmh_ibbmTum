@@ -9,15 +9,18 @@ parser = argparse.ArgumentParser(description='HDF5-Creation')
 
 parser.add_argument('--csv_name', type=str, default="subjects",
                         help='path and base name of csv file. Outputs will be csv_name_train.csv and csv_name_test.csv (default: subjects)')
-parser.add_argument('--data_dir', type=str, default="./testsuite", help="Directory with images to load")
+parser.add_argument('--data_dir', type=str, default="./testsuite", nargs='*', help="Directory with images to load")
 parser.add_argument('--pattern', type=str, default="*", help="Pattern to match files in directory. (default: *)")
 parser.add_argument('--test_frac', type=float, default=0.2, help="Fraction of subjects to be held in training set. (default: 0.2)")
 
 
 args = parser.parse_args()
 
-search_pattern = join(args.data_dir, args.pattern)
-subject_dirs = glob.glob(search_pattern)
+subject_dirs = []
+import pdb; pdb.set_trace()
+for dir_i in args.data_dir:
+    search_pattern = join(dir_i, args.pattern)
+    subject_dirs = subject_dirs.append(glob.glob(search_pattern))
 
 num_subject = len(subject_dirs)
 
