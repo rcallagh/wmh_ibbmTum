@@ -98,7 +98,7 @@ def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     #---------------------------------------------------
     if gt_image is not None:
         gt_image_suitable[:, lhs_row_min:lhs_row_max, lhs_col_min:lhs_col_max] = gt_image[:, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max]
-        gt_image_suitable[gt_image_suitable == 2] = 0;
+        gt_image_suitable[gt_image_suitable > 1] = 0;
         gt_image_suitable = gt_image_suitable[..., np.newaxis]
 
     FLAIR_image_suitable  = FLAIR_image_suitable[..., np.newaxis]
