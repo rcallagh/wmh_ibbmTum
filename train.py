@@ -2,7 +2,7 @@
 
 import os
 import numpy as np
-# import tensorflow as tf
+import tensorflow as tf
 import warnings
 import h5py
 import SimpleITK as sitk
@@ -15,6 +15,20 @@ from wmh.model import get_unet
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
+
+###################################
+# TensorFlow wizardry
+config = tf.ConfigProto()
+
+# Don't pre-allocate memory; allocate as-needed
+config.gpu_options.allow_growth = True
+
+# Only allow a total of half the GPU memory to be allocated
+config.gpu_options.per_process_gpu_memory_fraction = 0.5
+
+# Create a session with the above options specified.
+k.tensorflow_backend.set_session(tf.Session(config=config))
+###################################
 
 
 def train(args):
@@ -49,7 +63,7 @@ def train(args):
     epochs = args.epochs
     verbose = args.verbose
     import pdb; pdb.set_trace()
-    history = model.fit(images, masks, batch_size=bs, epochs=epochs, verbose=verbose, shuffle=True)
+    history = model.fit(images, masks, batch_size=16, epochs=1)
 
     model_path = 'models/'
     if not os.path.exists(model_path):
