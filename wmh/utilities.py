@@ -26,6 +26,7 @@ class ProcessingParams:
     def updateFromArgs(self, args):
         self.rows_standard = args.rows_standard
         self.cols_standard = args.cols_standard
+        self.two_modalities = not args.FLAIR_only
 
 def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     #  start_slice = 10

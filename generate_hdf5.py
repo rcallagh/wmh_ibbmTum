@@ -65,7 +65,10 @@ class Dataset:
                 gt_array = sitk.GetArrayFromImage(gt_image)
                 [images_preproc, self.proc_params] = preprocessing(FLAIR_array, T1_array, self.proc_params, gt_array)
 
-                image_dataset = np.append(image_dataset, np.concatenate((images_preproc["FLAIR"], images_preproc["T1"]), axis=3), axis=0)
+                if self.proc_params.two_modalities:
+                    image_dataset = np.append(image_dataset, np.concatenate((images_preproc["FLAIR"], images_preproc["T1"]), axis=3), axis=0)
+                else:
+                    image_dataset = np.append(image_dataset, images_preproc["FLAIR"], axis=0)
                 gt_dataset = np.append(gt_dataset, images_preproc["gt"], axis = 0)
                 print(image_dataset.shape)
 
@@ -86,8 +89,8 @@ class Dataset:
             hf.create_dataset('image_dataset', data=image_dataset, compression='gzip')
             hf.create_dataset('gt_dataset', data=gt_dataset, compression='gzip')
 
-            dt = h5py.special_dtype(vlen=str)
-            hf.create_dataset("subject", data=subjects, dtype=dt, compression="gzip")
+            # dt = h5py.special_dtype(vlen=str)
+            # hf.create_dataset("subject", data=subjects, dtype=dt, compression="gzip")
 
         end_d = time.time() - start_d
         print("Successfully written {} subjects in {} in {:.3f} seconds.".format(len(self.subject_dirs)-num_skipped, self.dataset_name, end_d))
@@ -113,6 +116,7 @@ if __name__ == "__main__":
                         help="Default name of T1 images. (default T1/T1_brain.nii.gz)")
     parser.add_argument('--FLAIR_name', type=str, default='T2_FLAIR/T2_FLAIR_brain.nii.gz', help='Default name of T2FLAIR images. (default T2_FLAIR/T2_FLAIR)')
     parser.add_argument('--gt_name', type=str, default='T2_FLAIR/lesions/final_mask.nii.gz',help='Default name for ground truth segmentations (default T2_FLAIR/lesions/final_mask.nii.gz)')
+    parser.add_argument('--FLAIR_only', action='store_true', help='Flag to only use FLAIR')
 
     args = parser.parse_args()
 
