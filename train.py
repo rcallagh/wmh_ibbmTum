@@ -63,7 +63,7 @@ def train(args):
     epochs = args.epochs
     verbose = args.verbose
     import pdb; pdb.set_trace()
-    history = model.fit(images, masks, batch_size=bs, epochs=epochs)
+    history = model.fit(img_gen.flow(images, masks, batch_size=bs), steps_per_epoch=samples_num / bs, epochs=epochs, verbose=verbose, shuffle="batch")
 
     model_path = 'models/'
     if not os.path.exists(model_path):
