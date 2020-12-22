@@ -46,6 +46,7 @@ def train(args):
             rotation_range=15,
             zoom_range=0.1,
             shear_range=18,
+            validation_split=0.2
         )
 
     num_channel = 2
@@ -62,8 +63,18 @@ def train(args):
     bs = args.batch_size
     epochs = args.epochs
     verbose = args.verbose
+
+    train_gen = img_gen.flow(images, masks, batch_size=bs, subset='training')
+    validation_gen = img_gen.flow(images, masks, batch_size=bs, subset='validation')
     import pdb; pdb.set_trace()
-    history = model.fit(img_gen.flow(images, masks, batch_size=bs), steps_per_epoch=samples_num / bs, epochs=epochs, verbose=verbose, shuffle="batch")
+    history = model.fit(
+        train_gen,
+        steps_per_epoch=train_gen.sample / bs,
+        validation_data = validation_gen,
+        validation_steps = validation_gen.samples / bs,
+        epochs=epochs,
+        verbose=verbose
+    )
 
     model_path = 'models/'
     if not os.path.exists(model_path):
