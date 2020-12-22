@@ -42,7 +42,9 @@ def train(args, i_network):
 
     #Set up on the fly augmentation
     if args.no_aug:
-        img_gen = ImageDataGenerator()
+        img_gen = ImageDataGenerator(
+            validation_split=0.2
+        )
     else:
         img_gen = ImageDataGenerator(
             rotation_range=15,
