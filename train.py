@@ -20,8 +20,8 @@ print(device_lib.list_local_devices())
 def train(args):
     #Load in training dataset
     f = h5py.File(args.hdf5_name_train)
-    images = f['image_dataset']
-    masks = f['gt_dataset']
+    images = np.array(f['image_dataset'])
+    masks = np.array(f['gt_dataset'])
     subject = f['subject']
 
     #Set up on the fly augmentation
@@ -49,7 +49,7 @@ def train(args):
     epochs = args.epochs
     verbose = args.verbose
     import pdb; pdb.set_trace()
-    history = model.fit(img_gen.flow(images, masks, batch_size=bs), steps_per_epoch=samples_num / bs, epochs=epochs, verbose=verbose, shuffle=True)
+    history = model.fit(images, masks, batch_size=bs, epochs=epochs, verbose=verbose, shuffle=True)
 
     model_path = 'models/'
     if not os.path.exists(model_path):
