@@ -47,7 +47,7 @@ def get_crop_shape(target, refer):
         return (ch1, ch2), (cw1, cw2)
 
 ### ----define U-net architecture--------------
-def get_unet(img_shape = None, f_weight=None):
+def get_unet(img_shape = None, f_weight=None, lr=2e-4):
 
     #If we have a file name provided, check if it has the full model
     full_model = False
@@ -119,7 +119,7 @@ def get_unet(img_shape = None, f_weight=None):
     conv10 = Conv2D(1, 1, 1, activation='sigmoid', dim_ordering=dim_ordering)(conv9)
     model = Model(input=inputs, output=conv10)
 
-    model.compile(optimizer=Adam(lr=(1e-4)*2), loss=dice_coef_loss, metrics=[dice_coef_for_training])
+    model.compile(optimizer=Adam(lr=lr, loss=dice_coef_loss, metrics=[dice_coef_for_training])
 
     if f_weight is not None:
         print("Previous checkpoint only contains weights. Loading in previous weights from {}, but initial training may be poor due to lack of trained optimizer.".format(f_weight))
