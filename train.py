@@ -79,26 +79,31 @@ def train(args, i_network):
     train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
     validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
 
+    model_path = os.path.join(args.model_dir, (str(i_network) + '.h5'))
+    checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+    callbacks_list = [checkpoint]
+
     history = model.fit(
         train_gen,
         steps_per_epoch=train_gen.n / bs,
         validation_data = validation_gen,
         validation_steps = validation_gen.n / bs,
         epochs=epochs,
-        verbose=verbose
+        verbose=verbose,
+        callbacks = callbacks_list
     )
 
-    model_path = args.model_dir
-    if not os.path.exists(model_path):
-        os.mkdir(model_path)
-    import pdb; pdb.set_trace()
+    # model_path = args.model_dir
+    # if not os.path.exists(model_path):
+    #     os.mkdir(model_path)
+    # import pdb; pdb.set_trace()
 
 
 
-    model_path += str(i_network) + '.h5'
-    model.save_weights(model_path)
-    model.save(model_path)
-    print('Model saved to ', model_path)
+    # model_path += str(i_network) + '.h5'
+    # model.save_weights(model_path)
+    # model.save(model_path)
+    # print('Model saved to ', model_path)
 
     f.close()
 
