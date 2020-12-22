@@ -17,7 +17,6 @@ parser.add_argument('--test_frac', type=float, default=0.2, help="Fraction of su
 args = parser.parse_args()
 
 subject_dirs = []
-import pdb; pdb.set_trace()
 for dir_i in args.data_dir:
     search_pattern = join(dir_i, args.pattern)
     subject_dirs.extend(list(glob.glob(search_pattern)))
