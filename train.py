@@ -24,7 +24,7 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 
 # Only allow a total of half the GPU memory to be allocated
-config.gpu_options.per_process_gpu_memory_fraction = 0.5
+config.gpu_options.per_process_gpu_memory_fraction = 1.0
 
 # Create a session with the above options specified.
 K.tensorflow_backend.set_session(tf.Session(config=config))
@@ -34,8 +34,8 @@ K.tensorflow_backend.set_session(tf.Session(config=config))
 def train(args):
     #Load in training dataset
     f = h5py.File(args.hdf5_name_train)
-    images = np.array(f['image_dataset'])
-    masks = np.array(f['gt_dataset'])
+    images = f['image_dataset']
+    masks = f['gt_dataset']
     subject = f['subject']
 
     #Set up on the fly augmentation
@@ -63,7 +63,7 @@ def train(args):
     epochs = args.epochs
     verbose = args.verbose
     import pdb; pdb.set_trace()
-    history = model.fit(images, masks, batch_size=16, epochs=1)
+    history = model.fit(images, masks, batch_size=bs, epochs=epochs)
 
     model_path = 'models/'
     if not os.path.exists(model_path):
