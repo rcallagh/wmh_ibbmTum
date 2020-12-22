@@ -75,15 +75,15 @@ def train(args, i_network):
     bs = args.batch_size
     epochs = args.epochs
     verbose = args.verbose
-    import pdb; pdb.set_trace()
+
     train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
     validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
 
     history = model.fit(
         train_gen,
-        steps_per_epoch=len(train_gen) / bs,
+        steps_per_epoch=train_gen.n / bs,
         validation_data = validation_gen,
-        validation_steps = len(validation_gen) / bs,
+        validation_steps = validation_gen.n / bs,
         epochs=epochs,
         verbose=verbose
     )
