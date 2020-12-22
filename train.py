@@ -69,7 +69,7 @@ def train(args):
     import pdb; pdb.set_trace()
     history = model.fit(
         train_gen,
-        steps_per_epoch=train_gen.sample / bs,
+        steps_per_epoch=train_gen.samples / bs,
         validation_data = validation_gen,
         validation_steps = validation_gen.samples / bs,
         epochs=epochs,
