@@ -121,10 +121,10 @@ def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     return imgs_out, proc_params
 
 def postprocessing(FLAIR_array, pred, proc_params):
-    start_slice = int(np.shape(FLAIR_array)[0]*per)
-    num_o = np.shape(FLAIR_array)[1]  # original size
-    rows_o = np.shape(FLAIR_array)[1]
-    cols_o = np.shape(FLAIR_array)[2]
+    # start_slice = int(np.shape(FLAIR_array)[0]*proc_params.ignore_frac)
+    # num_o = np.shape(FLAIR_array)[1]  # original size
+    # rows_o = np.shape(FLAIR_array)[1]
+    # cols_o = np.shape(FLAIR_array)[2]
     original_pred = np.zeros(np.shape(FLAIR_array), dtype=np.float32)
 #    import pdb; pdb.set_trace()
 
@@ -137,9 +137,10 @@ def postprocessing(FLAIR_array, pred, proc_params):
     lhs_col_min = proc_params.lhs_col_min
     lhs_col_max = proc_params.lhs_col_max
 
-    original_pred[:, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max] = pred[:,lhs_row_min:lhs_row_max,lhs_col_min:lhs_col_max,0]
-    original_pred[0: start_slice, ...] = 0
-    original_pred[(num_o-start_slice):num_o, ...] = 0
+    zero_slice = proc_params.zero_slice
+    original_pred[~zero_slice, rhs_row_min:rhs_row_max, rhs_col_min:rhs_col_max] = pred[:,lhs_row_min:lhs_row_max,lhs_col_min:lhs_col_max,0]
+    # original_pred[0: start_slice, ...] = 0
+    # original_pred[(num_o-start_slice):num_o, ...] = 0
     return original_pred
 
 def setCroppingParams(proc_params, image_shape):
