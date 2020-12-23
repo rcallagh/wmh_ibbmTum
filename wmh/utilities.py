@@ -38,6 +38,8 @@ def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     if gt_image is not None:
         gt_image = np.float32(gt_image)
 
+    FLAIR_image, T1_image, gt_image = strip_empty_slices(FLAIR_image, T1_image, gt_image)
+
     brain_mask_FLAIR = np.ndarray((np.shape(FLAIR_image)[0],FLAIR_image.shape[1], FLAIR_image.shape[2]), dtype=np.float32)
     brain_mask_T1 = np.ndarray(T1_image.shape, dtype=np.float32)
     imgs_two_channels = np.ndarray((num_selected_slice, proc_params.rows_standard, proc_params.cols_standard, channel_num), dtype=np.float32)
@@ -216,3 +218,30 @@ def setCroppingParams(proc_params, image_shape):
     proc_params.lhs_col_max = lhs_col_max
 
     return proc_params
+
+def strip_empty_slices(FLAIR_array, T1_array=None, gt_array=None):
+    import pdb; pdb.set_trace()
+    # FLAIR_min = np.min(FLAIR_array)
+
+    # Find zero mean FLAIR slices
+    FLAIR_slice_mean = np.mean(FLAIR_array, axis=(1,2))
+    FLAIR_zero_slice = FLAIR_slice_mean == 0
+
+    # Find zero mean T1 slices
+    T1_zero_slice = np.zeros(FLAIR_zero_slice.shape, dtype=bool)
+    if (T1_array is not None) and (len(T1_array) > 0):
+        T1_slice_mean = np.mean(T1_array, axis=(1,2))
+        T1_zero_slice = T1_slice_mean == 0
+
+    #Combine zeros
+    zero_slice = np.logical_or(FLAIR_zero_slice, T1_zero_slice)
+
+    #Resample arrays
+    FLAIR_array = FLAIR_array[~zero_slice, :, :]
+    if (T1_array is not None) and (len(T1_array) > 0):
+        T1_array = T1_array[~zero_slice, :, :]
+
+    if (gt_array is not None) and (len(gt_array) > 0):
+        gt_array = gt_array[~zero_slice, :, :]
+
+    return FLAIR_array, T1_array, gt_array
