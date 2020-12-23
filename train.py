@@ -110,12 +110,12 @@ def train(args, i_network):
     callbacks_list = [checkpoint]
 
     history = model.fit(
-        train_gen,
-        steps_per_epoch=train_gen.n / bs,
-        validation_data = validation_gen,
-        validation_steps = validation_gen.n / bs,
+        images,
+        masks,
+        batch_size = bs,
         epochs=epochs,
         verbose=verbose,
+        shuffle=True,
         callbacks = callbacks_list
     )
 
