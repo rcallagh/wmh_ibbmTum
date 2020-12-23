@@ -224,7 +224,6 @@ def setCroppingParams(proc_params, image_shape):
     return proc_params
 
 def strip_empty_slices(FLAIR_array, proc_params, T1_array=None, gt_array=None):
-    import pdb; pdb.set_trace()
     # FLAIR_min = np.min(FLAIR_array)
 
     # Find zero mean FLAIR slices
