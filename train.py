@@ -57,10 +57,14 @@ def train(args, i_network):
     weight_path = None
     if args.resume:
         #Back up previous checkpoint/weights
-        weight_str = os.path.join(args.model_dir,str(i_network))
+        if args.FLAIR_only:
+            weight_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
+        else:
+            weight_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
+        # weight_str = os.path.join(args.model_dir,str(i_network))
         os.popen('cp {}.h5 {}_orig_{}.h5'.format(weight_str, weight_str, strftime('%d-%m-%y_%H%M')))
 
-        weight_path = os.path.join(args.model_dir,str(i_network)) + '.h5'
+        weight_path = weight_str + '.h5'
 
 
     num_channel = 2
@@ -137,7 +141,7 @@ def main():
     parser.add_argument('--validation_batch_size', type=int, default=30, metavar='N',help='input batch size for validation (default: 30)')
     parser.add_argument('--epochs', type=int, default=50, help='Number of epochs (default: 50)')
     parser.add_argument('--verbose', action='store_true', help='Flag to use verbose training')
-    parser.add_argument('--model_dir', type=str, default='./wmh/weights', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
+    parser.add_argument('--model_dir', type=str, default='./wmh/weights/', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
     parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
     parser.add_argument('--FLAIR_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
     parser.add_argument('--no_aug', action='store_true', help="Flag to not do any augmentation")
