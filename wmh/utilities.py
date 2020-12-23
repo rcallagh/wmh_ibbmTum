@@ -40,7 +40,8 @@ def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     if gt_image is not None:
         gt_image = np.float32(gt_image)
 
-    FLAIR_image, T1_image, gt_image = strip_empty_slices(FLAIR_image, T1_image, gt_image)
+    FLAIR_image, T1_image, gt_image, zero_slice = strip_empty_slices(FLAIR_image, proc_params, T1_image, gt_image)
+    proc_params.zero_slice = zero_slice
 
     brain_mask_FLAIR = np.ndarray((np.shape(FLAIR_image)[0],FLAIR_image.shape[1], FLAIR_image.shape[2]), dtype=np.float32)
     brain_mask_T1 = np.ndarray(T1_image.shape, dtype=np.float32)
@@ -251,4 +252,4 @@ def strip_empty_slices(FLAIR_array, proc_params, T1_array=None, gt_array=None):
     if (gt_array is not None) and (len(gt_array) > 0):
         gt_array = gt_array[~zero_slice, :, :]
 
-    return FLAIR_array, T1_array, gt_array
+    return FLAIR_array, T1_array, gt_array, zero_slice
