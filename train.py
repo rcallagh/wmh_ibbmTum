@@ -38,7 +38,7 @@ def train(args, i_network):
     f = h5py.File(args.hdf5_name_train)
     images = f['image_dataset']
     masks = f['gt_dataset']
-    subject = f['subject']
+    # subject = f['subject']
 
     #Set up on the fly augmentation
     if args.no_aug:
@@ -81,6 +81,24 @@ def train(args, i_network):
 
     train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
     validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
+
+    if args.output_test_aug:
+        import pdb; pdb.set_trace()
+        aug_test_img = img_gen.flow(images, batch_size=1, seed=1234, subset='training',save_to_dir=args.model_dir,save_prefix='img', save_format='png')
+        total = 0
+        for image in aug_test_img:
+            total+=1
+            if total > 10:
+                break
+
+        aug_test_mask = img_gen.flow(masks, batch_size=1, seed=1234, subset='training',save_to_dir=args.model_dir,save_prefix='masks', save_format='png')
+        total = 0
+        for image in aug_test_mask:
+            total+=1
+            if total > 10:
+                break
+
+    import pdb; pdb.set_trace()
 
     model_path = os.path.join(args.model_dir, (str(i_network) + '.h5'))
     checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
@@ -129,7 +147,7 @@ def main():
     parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
     parser.add_argument('--test_ensemble', action='store_true', help='Flag to test the overall ensemble performance once all networks are trained')
     parser.add_argument('--lr', type=float, default=2e-4, help='Learning rate (default: 2e-4)')
-
+    parser.add_argument('--output_test_aug', action='store_true', help='Flag to save 10 test images from augmentation generator')
     args = parser.parse_args()
 
     warnings.filterwarnings("ignore")
