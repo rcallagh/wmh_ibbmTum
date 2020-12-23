@@ -113,6 +113,7 @@ def train(args, i_network):
         images,
         masks,
         batch_size = bs,
+        validation_split=0.2,
         epochs=epochs,
         verbose=verbose,
         shuffle=True,
