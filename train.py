@@ -102,7 +102,10 @@ def train(args, i_network):
                 break
 
 
-    model_path = os.path.join(args.model_dir, (str(i_network) + '.h5'))
+    if args.FLAIR_only:
+        model_path = os.path.join(args.model_dir, 'FLAIR_only', (str(i_network) + '.h5'))
+    else:
+        model_path = os.path.join(args.model_dir, 'FLAIR_T1', (str(i_network) + '.h5'))
     checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
     callbacks_list = [checkpoint]
 
