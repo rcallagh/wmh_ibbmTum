@@ -221,7 +221,7 @@ def setCroppingParams(proc_params, image_shape):
 
     return proc_params
 
-def strip_empty_slices(FLAIR_array, T1_array=None, gt_array=None):
+def strip_empty_slices(FLAIR_array, proc_params, T1_array=None, gt_array=None):
     import pdb; pdb.set_trace()
     # FLAIR_min = np.min(FLAIR_array)
 
@@ -237,6 +237,11 @@ def strip_empty_slices(FLAIR_array, T1_array=None, gt_array=None):
 
     #Combine zeros
     zero_slice = np.logical_or(FLAIR_zero_slice, T1_zero_slice)
+
+    if proc_params.ignore_frac > 0:
+        start_slice = int(FLAIR_array.shape[0] * proc_params.ignore_frac)
+        zero_slice[0:start_slice] = True
+        zero_slice[-start_slice:] = True
 
     #Resample arrays
     FLAIR_array = FLAIR_array[~zero_slice, :, :]
