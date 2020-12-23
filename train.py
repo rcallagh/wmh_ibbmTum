@@ -36,8 +36,8 @@ K.tensorflow_backend.set_session(tf.compat.v1.Session(config=config))
 def train(args, i_network):
     #Load in training dataset
     f = h5py.File(args.hdf5_name_train)
-    images = f['image_dataset']
-    masks = f['gt_dataset']
+    images = np.array(f['image_dataset'])
+    masks = np.array(f['gt_dataset'])
     # subject = f['subject']
 
     #Set up on the fly augmentation
