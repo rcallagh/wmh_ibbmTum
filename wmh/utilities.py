@@ -34,7 +34,6 @@ def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     #  start_slice = 10
     channel_num = 2
     print(np.shape(FLAIR_image))
-    num_selected_slice = FLAIR_image.shape[0]
     FLAIR_image = np.float32(FLAIR_image)
     T1_image = np.float32(T1_image)
     if gt_image is not None:
@@ -42,6 +41,7 @@ def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
 
     FLAIR_image, T1_image, gt_image, zero_slice = strip_empty_slices(FLAIR_image, proc_params, T1_image, gt_image)
     proc_params.zero_slice = zero_slice
+    num_selected_slice = FLAIR_image.shape[0]
 
     brain_mask_FLAIR = np.ndarray((np.shape(FLAIR_image)[0],FLAIR_image.shape[1], FLAIR_image.shape[2]), dtype=np.float32)
     brain_mask_T1 = np.ndarray(T1_image.shape, dtype=np.float32)
