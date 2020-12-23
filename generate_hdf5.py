@@ -117,12 +117,9 @@ if __name__ == "__main__":
     parser.add_argument('--FLAIR_name', type=str, default='T2_FLAIR/T2_FLAIR_brain.nii.gz', help='Default name of T2FLAIR images. (default T2_FLAIR/T2_FLAIR)')
     parser.add_argument('--gt_name', type=str, default='T2_FLAIR/lesions/final_mask.nii.gz',help='Default name for ground truth segmentations (default T2_FLAIR/lesions/final_mask.nii.gz)')
     parser.add_argument('--FLAIR_only', action='store_true', help='Flag to only use FLAIR')
+    parser.add_argument('--ignore_frac', type=float, default = 0.125, help='Fraction of slices from top and bottome to ignore (default: 0.125)')
 
     args = parser.parse_args()
-
-    network_params = {"dataset_name": args.hdf5_name, "rows_standard": args.rows_standard, "cols_standard": args.cols_standard,
-                      "data_path": args.data_dir, "csv_file": args.csv_file, "pattern": args.pattern, "T1_name": args.T1_name,
-                      "gt_name": args.gt_name, "FLAIR_name": args.FLAIR_name}
 
     stratified = Dataset(args)
     stratified.create_hdf5_dataset()

@@ -22,11 +22,13 @@ class ProcessingParams:
         self.lhs_col_max = 0
         self.brain_CoM = []
         self.two_modalities = True
+        self.ignore_frac = 0
 
     def updateFromArgs(self, args):
         self.rows_standard = args.rows_standard
         self.cols_standard = args.cols_standard
         self.two_modalities = not args.FLAIR_only
+        self.ignore_frac = args.ignore_frac
 
 def preprocessing(FLAIR_image, T1_image, proc_params, gt_image = None):
     #  start_slice = 10
