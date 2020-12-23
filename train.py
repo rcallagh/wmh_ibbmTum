@@ -64,7 +64,7 @@ def train(args, i_network):
 
 
     num_channel = 2
-    if args.flair_only:
+    if args.FLAIR_only:
         num_channel = 1
 
     samples_num = images.shape[0]
@@ -83,7 +83,6 @@ def train(args, i_network):
     validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
 
     if args.output_test_aug:
-        import pdb; pdb.set_trace()
         aug_test_img = img_gen.flow(images, batch_size=1, seed=1234, subset='training',save_to_dir=args.model_dir,save_prefix='img', save_format='png')
         total = 0
         for image in aug_test_img:
@@ -98,7 +97,6 @@ def train(args, i_network):
             if total > 10:
                 break
 
-    import pdb; pdb.set_trace()
 
     model_path = os.path.join(args.model_dir, (str(i_network) + '.h5'))
     checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
@@ -141,7 +139,7 @@ def main():
     parser.add_argument('--verbose', action='store_true', help='Flag to use verbose training')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
     parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
-    parser.add_argument('--flair_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
+    parser.add_argument('--FLAIR_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
     parser.add_argument('--no_aug', action='store_true', help="Flag to not do any augmentation")
     parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
     parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
