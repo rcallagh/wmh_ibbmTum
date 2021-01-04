@@ -10,6 +10,7 @@
 #$ -S /bin/bash
 #$ -j y
 #$ -t 1
+#$ -R y
 
 #===== PYTHON/CUDA setup ============================
 # source /share/apps/
