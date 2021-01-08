@@ -224,6 +224,13 @@ def main():
         pred[pred <= 0.45] = 0
 
 
+        pred = postprocessing(FLAIR_array, pred, proc_params) # get the original size to match
+
+        filename_resultImage = os.path.join(inputDir, args.output_name)
+        output_img = sitk.GetImageFromArray(pred)
+        output_img.CopyInformation(FLAIR_image)
+        sitk.WriteImage(output_img, filename_resultImage, imageIO="NiftiImageIO")
+
 
 if __name__=='__main__':
     main()
