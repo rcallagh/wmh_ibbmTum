@@ -190,7 +190,6 @@ def main():
         models.append(model)
 
     num_subject = len(subject_dirs)
-    import pdb; pdb.set_trace()
     for i_subject in range(0, num_subject):
         inputDir = subject_dirs[i_subject]
         if not args.FLAIR_only:
@@ -210,9 +209,9 @@ def main():
             gt_array = sitk.GetArrayFromImage(gt_image)
             [images_preproc, proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), proc_params, gt_array)
             imgs_test = images_preproc["FLAIR"]
-
-        predictions = np.zeros(img_shape)
-        predictions = predictions[..., np.newaxis]
+        import pdb; pdb.set_trace()
+        predictions = np.zeros(imgs_test.shape)
+        predictions = predictions[..., 0]
         for i_network in range(0, args.num_unet):
             pred = models[i_network].predict(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
             predictions = np.concatenate((predictions, pred), axis=3)
