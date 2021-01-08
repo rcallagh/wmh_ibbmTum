@@ -199,7 +199,7 @@ def main():
             T1_image = sitk.ReadImage(os.path.join(inputDir, args.T1_name), imageIO="NiftiImageIO")
             T1_array = sitk.GetArrayFromImage(T1_image)
             gt_image = sitk.ReadImage(os.path.join(inputDir, args.gt_name), imageIO="NiftiImageIO")
-            gt_array = sitk.G§etArrayFromImage(gt_array)
+            gt_array = sitk.GetArrayFromImage(gt_array)
             [images_preproc, proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), proc_params, gt_array)  # data preprocessing
             imgs_test = np.concatenate((images_preproc["FLAIR"], images_preproc["T1"]), axis=3)
         else:
