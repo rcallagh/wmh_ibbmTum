@@ -222,9 +222,9 @@ def main():
         pred[pred > 0.45] = 1      #0.45 thresholding
         pred[pred <= 0.45] = 0
 
+        pred = pred[..., np.newaxis]
         import pdb; pdb.set_trace()
         pred = postprocessing(FLAIR_array, pred, proc_params) # get the original size to match
-        pred = pred[..., np.newaxis]
 
         filename_resultImage = os.path.join(inputDir, args.output_name)
         output_img = sitk.GetImageFromArray(pred)
