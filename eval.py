@@ -209,7 +209,6 @@ def main():
             gt_array = sitk.GetArrayFromImage(gt_image)
             [images_preproc, proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), proc_params, gt_array)
             imgs_test = images_preproc["FLAIR"]
-        import pdb; pdb.set_trace()
 
         for i_network in range(args.num_unet):
             pred = models[i_network].predict(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
@@ -223,7 +222,7 @@ def main():
         pred[pred > 0.45] = 1      #0.45 thresholding
         pred[pred <= 0.45] = 0
 
-
+        import pdb; pdb.set_trace()
         pred = postprocessing(FLAIR_array, pred, proc_params) # get the original size to match
         pred = pred[..., np.newaxis]
 
