@@ -187,6 +187,7 @@ def main():
     num_subject = len(subject_dirs)
     import pdb; pdb.set_trace()
     for i_subject in range(0, num_subject):
+        inputDir = subject_dirs[i_subject]
         if args.FLAIR_only:
             FLAIR_image = sitk.ReadImage(os.path.join(inputDir, '/T2_FLAIR/T2_FLAIR.nii.gz'), imageIO="NiftiImageIO")
             FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
