@@ -215,7 +215,6 @@ def main():
         predictions = predictions[..., np.newaxis]
         for i_network in range(0, args.num_unet):
             pred = models[i_network].predict(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
-            pred = pred[...,np.newaxis]
             predictions = np.concatenate((predictions, pred), axis=3)
             import pdb; pdb.set_trace()
 
