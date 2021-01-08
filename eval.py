@@ -214,7 +214,7 @@ def main():
         for i_network in range(args.num_unet):
             pred = models[i_network].predict(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
             if i_network == 0:
-                predictons = pred
+                predictions = pred
             else:
                 predictions = np.concatenate((predictions, pred), axis=3)
 
