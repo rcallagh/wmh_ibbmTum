@@ -211,13 +211,12 @@ def main():
             imgs_test = images_preproc["FLAIR"]
         import pdb; pdb.set_trace()
 
-        for i_network in range(0, args.num_unet):
+        for i_network in range(args.num_unet):
             pred = models[i_network].predict(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
             if i_network == 0:
                 predictons = pred
             else:
                 predictions = np.concatenate((predictions, pred), axis=3)
-            import pdb; pdb.set_trace()
 
 
 
