@@ -186,6 +186,26 @@ def main():
 
     num_subject = len(subject_dirs)
     import pdb; pdb.set_trace()
+    for i_subject in range(0, num_subject):
+        if args.FLAIR_only:
+            FLAIR_image = sitk.ReadImage(os.path.join(inputDir, '/T2_FLAIR/T2_FLAIR.nii.gz'), imageIO="NiftiImageIO")
+            FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
+            T1_image = sitk.ReadImage(os.path.join(inputDir, '/T1/T1.nii.gz'), imageIO="NiftiImageIO")
+            T1_array = sitk.GetArrayFromImage(T1_image)
+            imgs_test = preprocessing(np.float32(FLAIR_array), np.float32(T1_array))  # data preprocessing
+        else:
+            FLAIR_image = sitk.ReadImage(os.path.join(inputDir, 'FLAIR.nii.gz'), imageIO="NiftiImageIO") #data preprocessing
+            FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
+            T1_array = []
+            imgs_test = preprocessing(np.float32(FLAIR_array), np.float32(T1_array))
+
+        predictions = []
+        for i_network in range(0, args.num_unet):
+            pred = model[i_network].fit(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
+            predictions.append(pred)
+            import pdb; pdb.set_trace()
+
+
 
 if __name__=='__main__':
     main()
