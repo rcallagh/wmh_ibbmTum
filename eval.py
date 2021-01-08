@@ -218,6 +218,10 @@ def main():
             else:
                 predictions = np.concatenate((predictions, pred), axis=3)
 
+        pred = np.mean(predictions, axis=3)
+
+        pred[pred > 0.45] = 1      #0.45 thresholding
+        pred[pred <= 0.45] = 0
 
 
 
