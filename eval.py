@@ -181,7 +181,7 @@ def main():
             img_shape=(args.rows_standard, args.cols_standard, 2)
 
         weight_path = weight_str + '.h5'
-        model = get_unet(img_shape, model_path)
+        model = get_unet(img_shape, weight_path)
         models.append(model)
 
     num_subject = len(subject_dirs)
