@@ -211,11 +211,13 @@ def main():
             [images_preproc, proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), proc_params, gt_array)
             imgs_test = images_preproc["FLAIR"]
 
-        predictions = []
+        predictions = np.array(img_shape)
+        predictions = predictions[..., np.newaxis]
         for i_network in range(0, args.num_unet):
             pred = models[i_network].predict(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
-            predictions.append(pred)
+            predictions = np.concatenate(predictions, pred, axis=3)
             import pdb; pdb.set_trace()
+
 
 
 
