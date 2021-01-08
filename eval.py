@@ -13,7 +13,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 from wmh.model import get_unet
-from wmh.utilities import preprocessing, postprocessing
+from wmh.utilities import preprocessing, postprocessing, ProcessingParams
 from time import strftime
 
 from tensorflow.python.client import device_lib
@@ -162,6 +162,10 @@ def main():
     warnings.filterwarnings("ignore")
     # images = np.load('images_three_datasets_sorted.npy')
     # masks = np.load('masks_three_datasets_sorted.npy')
+
+    proc_params = ProcessingParams()
+    proc_params.updateFromArgs(args)
+
     if args.csv_file is not None:
         with open(args.csv_file, "r") as s_dirs:
             subject_dirs = [line.strip() for line in s_dirs.readlines()]
@@ -173,7 +177,7 @@ def main():
     i_start = args.num_unet_start
     models = []
     for i_network in range(i_start, i_start+args.num_unet):
-        if not args.FLAIR_only:
+        if args.FLAIR_only:
             weight_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
             img_shape=(args.rows_standard, args.cols_standard, 1)
         else:
@@ -193,12 +197,18 @@ def main():
             FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
             T1_image = sitk.ReadImage(os.path.join(inputDir, args.T1_name), imageIO="NiftiImageIO")
             T1_array = sitk.GetArrayFromImage(T1_image)
-            imgs_test = preprocessing(np.float32(FLAIR_array), np.float32(T1_array))  # data preprocessing
+            gt_image = sitk.ReadImage(os.path.join(inputDir, args.gt_name), imageIO="NiftiImageIO")
+            gt_array = sitk.getArrayFromImage(gt_array)
+            [images_preproc, proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), proc_params, gt_array)  # data preprocessing
+            imgs_test = np.concatenate((images_preproc["FLAIR"], images_preproc["T1"]), axis=3)
         else:
             FLAIR_image = sitk.ReadImage(os.path.join(inputDir, args.FLAIR_name), imageIO="NiftiImageIO") #data preprocessing
             FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
             T1_array = []
-            imgs_test = preprocessing(np.float32(FLAIR_array), np.float32(T1_array))
+            gt_image = sitk.ReadImage(os.path.join(inputDir, args.gt_name), imageIO='NiftiImageIO')
+            gt_array = sitk.getArrayFromImage(gt_array)
+            [images_preproc, proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), proc_params, gt_array)
+            imgs_test = images_preproc["FLAIR"]
 
         predictions = []
         for i_network in range(0, args.num_unet):
