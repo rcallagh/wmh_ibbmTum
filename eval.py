@@ -213,7 +213,7 @@ def main():
 
         predictions = []
         for i_network in range(0, args.num_unet):
-            pred = model[i_network].fit(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
+            pred = models[i_network].fit(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
             predictions.append(pred)
             import pdb; pdb.set_trace()
 
