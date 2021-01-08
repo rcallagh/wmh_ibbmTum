@@ -225,6 +225,7 @@ def main():
 
 
         pred = postprocessing(FLAIR_array, pred, proc_params) # get the original size to match
+        pred = pred[..., np.newaxis]
 
         filename_resultImage = os.path.join(inputDir, args.output_name)
         output_img = sitk.GetImageFromArray(pred)
