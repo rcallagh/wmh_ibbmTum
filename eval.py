@@ -158,7 +158,13 @@ def main():
     warnings.filterwarnings("ignore")
     # images = np.load('images_three_datasets_sorted.npy')
     # masks = np.load('masks_three_datasets_sorted.npy')
-
+    modelEval = ModelEvaluation(args)
+    modelEval.load_model()
+    for i_subject in range(0, num_subject):
+        modelEval.predict(i_subject)
+        if args.compute_metrics:
+            modelEval.compute_metrics()
+    import pdb; pdb.set_trace()
     proc_params = ProcessingParams()
     proc_params.updateFromArgs(args)
 
