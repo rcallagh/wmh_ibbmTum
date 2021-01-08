@@ -175,10 +175,10 @@ def main():
     for i_network in range(i_start, i_start+args.num_unet):
         if args.FLAIR_only:
             weight_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
-            img_shape=(rows_standard, cols_standard, 1)
+            img_shape=(args.rows_standard, args.cols_standard, 1)
         else:
             weight_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
-            img_shape=(rows_standard, cols_standard, 2)
+            img_shape=(args.rows_standard, args.cols_standard, 2)
 
         weight_path = weight_str + '.h5'
         model = get_unet(img_shape, model_path)
