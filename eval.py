@@ -173,7 +173,7 @@ def main():
     i_start = args.num_unet_start
     models = []
     for i_network in range(i_start, i_start+args.num_unet):
-        if args.FLAIR_only:
+        if not args.FLAIR_only:
             weight_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
             img_shape=(args.rows_standard, args.cols_standard, 1)
         else:
@@ -188,7 +188,7 @@ def main():
     import pdb; pdb.set_trace()
     for i_subject in range(0, num_subject):
         inputDir = subject_dirs[i_subject]
-        if args.FLAIR_only:
+        if not args.FLAIR_only:
             FLAIR_image = sitk.ReadImage(os.path.join(inputDir, '/T2_FLAIR/T2_FLAIR.nii.gz'), imageIO="NiftiImageIO")
             FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
             T1_image = sitk.ReadImage(os.path.join(inputDir, '/T1/T1.nii.gz'), imageIO="NiftiImageIO")
