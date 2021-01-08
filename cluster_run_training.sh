@@ -2,18 +2,17 @@
 #====================
 # QSUB
 #====================
-#$ -l h_rt=12:0:0
-#$ -l tmem=12G
+#$ -l h_rt=4:00:0
+#$ -l tmem=20G
 #$ -l gpu=true
 #$ -N whm_train
-#$ -wd /SAN/medic/camino_2point0/Ross/wmh/
 #$ -S /bin/bash
 #$ -j y
-#$ -t 1
-#$ -R y
+#$ -o /SAN/medic/camino_2point0/Ross/wmh/
+#$ -t 1-3
 
 #===== PYTHON/CUDA setup ============================
-# source /share/apps/
+source /share/apps/source_files/python/python-3.6.4.source
 source /share/apps/source_files/cuda/cuda-10.0.source
 #===================================================
 
@@ -27,7 +26,7 @@ test_hdf="/SAN/medic/camino_2point0/Ross/wmh/biobank_test_data.hdf5"
 
 #Network params
 num_unet=1
-num_unet_start=${SGE_TASK_ID}
+num_unet_start=$((SGE_TASK_ID-1))
 
 # Create folder for python venv if does not exist already
 if [ ! -d ${PY_VENV_FOLDER} ]; then
@@ -48,7 +47,7 @@ fi
 date
 hostname
 # Change directory to the main FS
-cd ${WMH_FOLDER}
+#cd ${WMH_FOLDER}
 # Define the three planes
 # Define the outputs
 input_train="${out_dir_train}/training_set_${pln}.hdf5"
@@ -57,14 +56,17 @@ input_valid="${out_dir_valid}/validation_set_${pln}.hdf5"
 # First letter of the plane is capital
 cap_pln="$(tr '[:lower:]' '[:upper:]' <<< ${pln:0:1})${pln:1}"
 log_dir="../checkpoints/${cap_pln}_Weights_FastSurferCNN"
+pwd
 # Run the python function for training set
-python train.py \
+python "${WMH_FOLDER}train.py" \
        --hdf5_name_train ${train_hdf} \
-       --batch_size 32 \
+       --batch_size 30 \
        --epochs 60 \
        --resume \
        --num_unet ${num_unet} \
-       --num_unet_start ${num_unet_start}
+       --num_unet_start ${num_unet_start} \
+       --model_dir "${WMH_FOLDER}/wmh/weights/" \
+       -vv
 
 
 date

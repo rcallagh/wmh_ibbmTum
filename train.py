@@ -18,6 +18,7 @@ from time import strftime
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
+print('Doing the tensor flow stuff')
 ###################################
 # TensorFlow wizardry
 config = tf.compat.v1.ConfigProto()
@@ -31,14 +32,17 @@ config.gpu_options.per_process_gpu_memory_fraction = 1.0
 # Create a session with the above options specified.
 K.tensorflow_backend.set_session(tf.compat.v1.Session(config=config))
 ###################################
-
+print('Done the tensoflow stuff')
 
 def train(args, i_network):
     #Load in training dataset
+    print('Loading data')
     f = h5py.File(args.hdf5_name_train)
     images = np.array(f['image_dataset'])
     masks = np.array(f['gt_dataset'])
     # subject = f['subject']
+    f.close()
+    print('Loaded data')
 
     #Set up on the fly augmentation
     if args.no_aug:
@@ -65,7 +69,7 @@ def train(args, i_network):
         os.popen('cp {}.h5 {}_orig_{}.h5'.format(weight_str, weight_str, strftime('%d-%m-%y_%H%M')))
 
         weight_path = weight_str + '.h5'
-
+    print('loaded model')
 
     num_channel = 2
     if args.FLAIR_only:
@@ -144,7 +148,7 @@ def main():
     parser.add_argument('--batch_size', type=int, default=30, metavar='N', help='input batch size for training (default: 30)')
     parser.add_argument('--validation_batch_size', type=int, default=30, metavar='N',help='input batch size for validation (default: 30)')
     parser.add_argument('--epochs', type=int, default=50, help='Number of epochs (default: 50)')
-    parser.add_argument('--verbose', action='store_true', help='Flag to use verbose training')
+    parser.add_argument('--verbose', '-v', action='count', default=0, help='Flag to use verbose training output. -v will have progress bar per epoch, -vv will print one line per epoch (use this in non-interactive runs e.g. cluster)')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights/', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
     parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
     parser.add_argument('--FLAIR_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
@@ -161,6 +165,7 @@ def main():
     # masks = np.load('masks_three_datasets_sorted.npy')
     i_start = args.num_unet_start
     for i_net in range(i_start, i_start + args.num_unet):
+        print('Training net {}'.format(i_net))
         train(args, i_net)
 
 if __name__=='__main__':
