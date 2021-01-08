@@ -14,6 +14,7 @@ from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 from wmh.model import get_unet
 from wmh.utilities import preprocessing, postprocessing, ProcessingParams
+from evaluation import getDSC, getHausdorff, getLesionDetection, getAVD
 from time import strftime
 
 from tensorflow.python.client import device_lib
@@ -33,109 +34,102 @@ config.gpu_options.per_process_gpu_memory_fraction = 1.0
 K.tensorflow_backend.set_session(tf.compat.v1.Session(config=config))
 ###################################
 
+class ModelEvaluator():
+    def __init__(self, args):
+        self.args = args
+        self.i_start = i_start
 
-def train(args, i_network):
-    #Load in training dataset
-    f = h5py.File(args.hdf5_name_train)
-    images = np.array(f['image_dataset'])
-    masks = np.array(f['gt_dataset'])
-    # subject = f['subject']
+        self.models = []
 
-    #Set up on the fly augmentation
-    if args.no_aug:
-        img_gen = ImageDataGenerator(
-            validation_split=0.2
-        )
-    else:
-        img_gen = ImageDataGenerator(
-            rotation_range=15,
-            zoom_range=0.1,
-            shear_range=18,
-            validation_split=0.2
-        )
+        #Store a few useful things from the args
+        self.T1_name = args.T1_name
+        self.FLAIR_name = args.FLAIR_name
+        self.gt_name = args.gt_name
+        self.output_name = args.output_name
 
-    #If resuming, set up path to load in previous state
-    weight_path = None
-    if args.resume:
-        #Back up previous checkpoint/weights
-        if args.FLAIR_only:
-            weight_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
+        self.FLAIR_only
+        self.compute_metrics = args.compute_metrics
+
+        #Set up image pre/post processing paramters
+        self.proc_params = ProcessingParams()
+        self.proc_params.updateFromArgs(args)
+
+        self.imgs_test = []
+        self.pred = []
+        self.filename_resultImage
+
+        #Set up subject directories
+        if args.csv_file is not None:
+            with open(args.csv_file, "r") as s_dirs:
+                self.subject_dirs = [line.strip() for line in s_dirs.readlines()]
         else:
-            weight_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
-        # weight_str = os.path.join(args.model_dir,str(i_network))
-        os.popen('cp {}.h5 {}_orig_{}.h5'.format(weight_str, weight_str, strftime('%d-%m-%y_%H%M')))
+            search_pattern = join(self.data_path, self.pattern)
+            self.subject_dirs = glob.glob(self.search_pattern)
 
-        weight_path = weight_str + '.h5'
+    def load_model(self):
+        for i_network in range(self.i_start, self.i_start + self.args.num_unet):
+            if self.FLAIR_only:
+                weight_str = os.path.join(self.args.model_dir, 'FLAIR_only', str(i_network))
+                img_shape=(self.proc_params.rows_standard, self.proc_params.cols_standard, 1)
+            else:
+                weight_str = os.path.join(self.args.model_dir, 'FLAIR_T1', str(i_network))
+                img_shape=(self.proc_params.rows_standard, self.proc_params.cols_standard, 2)
 
+            weight_path = weight_str + '.h5'
+            model = get_unet(img_shape, weight_path)
+            self.models.append(model)
 
-    num_channel = 2
-    if args.FLAIR_only:
-        num_channel = 1
+    def predict(self, i_subject):
+        inputDir = self.subject_dirs[i_subject]
+        if not self.FLAIR_only:
+            FLAIR_image = sitk.ReadImage(os.path.join(inputDir, self.FLAIR_name), imageIO="NiftiImageIO")
+            FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
+            T1_image = sitk.ReadImage(os.path.join(inputDir, self.T1_name), imageIO="NiftiImageIO")
+            T1_array = sitk.GetArrayFromImage(T1_image)
+            # if self.compute_metrics:
+                # gt_image = sitk.ReadImage(os.path.join(inputDir, self.gt_name), imageIO="NiftiImageIO")
+                # gt_array = sitk.GetArrayFromImage(gt_image)
+            # else:
+                # gt_array = []
+            [images_preproc, self.proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), self.proc_params)  # data preprocessing
+            self.imgs_test = np.concatenate((images_preproc["FLAIR"], images_preproc["T1"]), axis=3)
+        else:
+            FLAIR_image = sitk.ReadImage(os.path.join(inputDir, self.FLAIR_name), imageIO="NiftiImageIO") #data preprocessing
+            FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
+            T1_array = []
+            # if self.compute_metrics:
+                # gt_image = sitk.ReadImage(os.path.join(inputDir, self.gt_name), imageIO='NiftiImageIO')
+                # gt_array = sitk.GetArrayFromImage(gt_image)
+            # else:
+                # gt_array = []
+            [images_preproc, self.proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), self.proc_params)
+            self.imgs_test = images_preproc["FLAIR"]
 
-    samples_num = images.shape[0]
-    row = images.shape[1]
-    col = images.shape[2]
-    img_shape = (row, col, num_channel)
+        for i_network in range(args.num_unet):
+            pred = models[i_network].predict(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
+            if i_network == 0:
+                predictions = pred
+            else:
+                predictions = np.concatenate((predictions, pred), axis=3)
 
-    # augmen, augment = augmentation(images[0,...,0], images[0,...,1], masks[0,...])
+        self.pred = np.mean(predictions, axis=3)
 
-    #Get the unet. If weight path provided this will load in previous state
-    model = get_unet(img_shape, weight_path, args.lr)
-    current_epoch = 1
-    bs = args.batch_size
-    epochs = args.epochs
-    verbose = args.verbose
+        self.pred[pred > 0.45] = 1      #0.45 thresholding
+        self.pred[pred <= 0.45] = 0
 
-    train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
-    validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
+        self.pred = pred[..., np.newaxis]
+        # import pdb; pdb.set_trace()
+        self.pred = postprocessing(FLAIR_array, self.pred, proc_params) # get the original size to match
 
-    if args.output_test_aug:
-        aug_test_img = img_gen.flow(images, batch_size=1, seed=1234, subset='training',save_to_dir=args.model_dir,save_prefix='img', save_format='png')
-        total = 0
-        for image in aug_test_img:
-            total+=1
-            if total > 10:
-                break
+        self.filename_resultImage = os.path.join(inputDir, self.args.output_name)
+        output_img = sitk.GetImageFromArray(self.pred)
+        output_img.CopyInformation(FLAIR_image)
+        sitk.WriteImage(output_img, self.filename_resultImage, imageIO="NiftiImageIO")
 
-        aug_test_mask = img_gen.flow(masks, batch_size=1, seed=1234, subset='training',save_to_dir=args.model_dir,save_prefix='masks', save_format='png')
-        total = 0
-        for image in aug_test_mask:
-            total+=1
-            if total > 10:
-                break
-
-
-    if args.FLAIR_only:
-        model_path = os.path.join(args.model_dir, 'FLAIR_only', (str(i_network) + '.h5'))
-    else:
-        model_path = os.path.join(args.model_dir, 'FLAIR_T1', (str(i_network) + '.h5'))
-    checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
-    callbacks_list = [checkpoint]
-
-    history = model.fit(
-        images,
-        masks,
-        batch_size = bs,
-        validation_split=0.2,
-        epochs=epochs,
-        verbose=verbose,
-        shuffle=True,
-        callbacks = callbacks_list
-    )
-
-    # model_path = args.model_dir
-    # if not os.path.exists(model_path):
-    #     os.mkdir(model_path)
-    # import pdb; pdb.set_trace()
-
+    def compute_metrics():
+        pass
 
 
-    # model_path += str(i_network) + '.h5'
-    # model.save_weights(model_path)
-    # model.save(model_path)
-    # print('Model saved to ', model_path)
-
-    f.close()
 
 def main():
     import argparse
@@ -158,6 +152,7 @@ def main():
     parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
     parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
     parser.add_argument('--ignore_frac', type=float, default = 0.125, help='Fraction of slices from top and bottome to ignore (default: 0.125)')
+    parser.add_argument('--compute_metrics', action='store_true', help='Flag whether to compute metrics after segmentation (requires ground truth)')
     args = parser.parse_args()
 
     warnings.filterwarnings("ignore")
