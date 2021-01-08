@@ -13,7 +13,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 from wmh.model import get_unet
-from wmh.utilities import augmentation
+from wmh.utilities import preprocessing, postprocessing
 from time import strftime
 
 from tensorflow.python.client import device_lib
