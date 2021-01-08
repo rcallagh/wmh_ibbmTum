@@ -149,6 +149,8 @@ def main():
     parser.add_argument('--FLAIR_name', type=str, default='T2_FLAIR/T2_FLAIR_brain.nii.gz', help='Default name of T2FLAIR images. (default T2_FLAIR/T2_FLAIR)')
     parser.add_argument('--gt_name', type=str, default='T2_FLAIR/lesions/final_mask.nii.gz',help='Default name for ground truth segmentations (default T2_FLAIR/lesions/final_mask.nii.gz)')
     parser.add_argument('--output_name', type=str, default="wmh_seg.nii.gz", help='Name of ouput segmentation file. (default wmh_seg.nii.gz)')
+    parser.add_argument('--rows_standard', type=int, default=200, help='Height of input to network (Default 200)')
+    parser.add_argument('--cols_standard', type=int, default=200, help='Width of input to network (Default 200)')
     parser.add_argument('--batch_size', type=int, default=30, metavar='N', help='input batch size for training (default: 30)')
     parser.add_argument('--verbose', action='store_true', help='Flag to use verbose training')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights/', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
@@ -168,16 +170,22 @@ def main():
         subject_dirs = glob.glob(self.search_pattern)
 
 
-    num_subject = len(subject_dirs)
-    import pdb; pdb.set_trace()
     i_start = args.num_unet_start
     models = []
     for i_network in range(i_start, i_start+args.num_unet):
         if args.FLAIR_only:
             weight_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
+            img_shape=(rows_standard, cols_standard, 1)
         else:
             weight_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
+            img_shape=(rows_standard, cols_standard, 2)
+
         weight_path = weight_str + '.h5'
+        model = get_unet(img_shape, model_path)
+        models.append(model)
+
+    num_subject = len(subject_dirs)
+    import pdb; pdb.set_trace()
 
 if __name__=='__main__':
     main()
