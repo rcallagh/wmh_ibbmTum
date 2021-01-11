@@ -37,7 +37,7 @@ K.tensorflow_backend.set_session(tf.compat.v1.Session(config=config))
 class ModelEvaluator():
     def __init__(self, args):
         self.args = args
-        self.i_start = i_start
+        self.i_start = args.num_unet_start
 
         self.models = []
 
