@@ -116,12 +116,12 @@ class ModelEvaluator():
 
         self.pred = np.mean(predictions, axis=3)
 
-        self.pred[pred > 0.45] = 1      #0.45 thresholding
-        self.pred[pred <= 0.45] = 0
+        self.pred[self.pred > 0.45] = 1      #0.45 thresholding
+        self.pred[self.pred <= 0.45] = 0
 
-        self.pred = pred[..., np.newaxis]
+        self.pred = self.pred[..., np.newaxis]
         # import pdb; pdb.set_trace()
-        self.pred = postprocessing(FLAIR_array, self.pred, proc_params) # get the original size to match
+        self.pred = postprocessing(FLAIR_array, self.pred, self.proc_params) # get the original size to match
 
         self.filename_resultImage = os.path.join(inputDir, self.args.output_name)
         output_img = sitk.GetImageFromArray(self.pred)
