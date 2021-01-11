@@ -66,7 +66,7 @@ class ModelEvaluator():
             search_pattern = join(self.data_path, self.pattern)
             self.subject_dirs = glob.glob(self.search_pattern)
 
-        self.num_subject = len(subject_dirs)
+        self.num_subject = len(self.subject_dirs)
 
     def load_model(self):
         for i_network in range(self.i_start, self.i_start + self.args.num_unet):
