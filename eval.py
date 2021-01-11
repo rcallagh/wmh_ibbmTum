@@ -56,7 +56,7 @@ class ModelEvaluator():
 
         self.imgs_test = []
         self.pred = []
-        self.filename_resultImage
+        self.filename_resultImage = ""
 
         #Set up subject directories
         if args.csv_file is not None:
