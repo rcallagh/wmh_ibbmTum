@@ -47,7 +47,7 @@ class ModelEvaluator():
         self.gt_name = args.gt_name
         self.output_name = args.output_name
 
-        self.FLAIR_only
+        self.FLAIR_only = args.FLAIR_only
         self.compute_metrics = args.compute_metrics
 
         #Set up image pre/post processing paramters
