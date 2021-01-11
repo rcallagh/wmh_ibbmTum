@@ -158,7 +158,7 @@ def main():
     warnings.filterwarnings("ignore")
     # images = np.load('images_three_datasets_sorted.npy')
     # masks = np.load('masks_three_datasets_sorted.npy')
-    modelEval = ModelEvaluation(args)
+    modelEval = ModelEvaluator(args)
     modelEval.load_model()
     for i_subject in range(0, num_subject):
         modelEval.predict(i_subject)
