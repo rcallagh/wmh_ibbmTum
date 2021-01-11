@@ -107,8 +107,8 @@ class ModelEvaluator():
             [images_preproc, self.proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), self.proc_params)
             self.imgs_test = images_preproc["FLAIR"]
 
-        for i_network in range(args.num_unet):
-            pred = models[i_network].predict(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
+        for i_network in range(self.args.num_unet):
+            pred = models[i_network].predict(imgs_test, batch_size=self.args.batch_size, verbose=self.args.verbose)
             if i_network == 0:
                 predictions = pred
             else:
@@ -148,7 +148,7 @@ def main():
     parser.add_argument('--rows_standard', type=int, default=200, help='Height of input to network (Default 200)')
     parser.add_argument('--cols_standard', type=int, default=200, help='Width of input to network (Default 200)')
     parser.add_argument('--batch_size', type=int, default=30, metavar='N', help='input batch size for training (default: 30)')
-    parser.add_argument('--verbose', action='store_true', help='Flag to use verbose training')
+    parser.add_argument('--verbose', '-v', action='count', help='Flag to use verbose training. A single flag will cause full verbosity. Double flag (e.g. -vv) will cause less verbosity (use -vv in non-interactive environments like cluster)')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights/', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
     parser.add_argument('--FLAIR_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
     parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
