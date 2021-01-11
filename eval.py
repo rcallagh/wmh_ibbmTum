@@ -108,7 +108,7 @@ class ModelEvaluator():
             self.imgs_test = images_preproc["FLAIR"]
 
         for i_network in range(self.args.num_unet):
-            pred = self.models[i_network].predict(imgs_test, batch_size=self.args.batch_size, verbose=self.args.verbose)
+            pred = self.models[i_network].predict(self.imgs_test, batch_size=self.args.batch_size, verbose=self.args.verbose)
             if i_network == 0:
                 predictions = pred
             else:
