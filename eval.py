@@ -83,6 +83,7 @@ class ModelEvaluator():
 
     def predict(self, i_subject):
         inputDir = self.subject_dirs[i_subject]
+        print('Predicting WMH on subject: ' + inputDir)
         if not self.FLAIR_only:
             FLAIR_image = sitk.ReadImage(os.path.join(inputDir, self.FLAIR_name), imageIO="NiftiImageIO")
             FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
@@ -161,80 +162,18 @@ def main():
     # images = np.load('images_three_datasets_sorted.npy')
     # masks = np.load('masks_three_datasets_sorted.npy')
 
-
+    #Initialise model evaluation class
     modelEval = ModelEvaluator(args)
+    #Load model parameters
     modelEval.load_model()
+
+    #Loop over subjects and evaluate
     for i_subject in range(0, modelEval.num_subject):
         modelEval.predict(i_subject)
         if args.compute_metrics:
             modelEval.compute_metrics()
     import pdb; pdb.set_trace()
-    proc_params = ProcessingParams()
-    proc_params.updateFromArgs(args)
 
-    if args.csv_file is not None:
-        with open(args.csv_file, "r") as s_dirs:
-            subject_dirs = [line.strip() for line in s_dirs.readlines()]
-    else:
-        search_pattern = join(self.data_path, self.pattern)
-        subject_dirs = glob.glob(self.search_pattern)
-
-
-    i_start = args.num_unet_start
-    models = []
-    for i_network in range(i_start, i_start+args.num_unet):
-        if args.FLAIR_only:
-            weight_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
-            img_shape=(args.rows_standard, args.cols_standard, 1)
-        else:
-            weight_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
-            img_shape=(args.rows_standard, args.cols_standard, 2)
-
-        weight_path = weight_str + '.h5'
-        model = get_unet(img_shape, weight_path)
-        models.append(model)
-
-    num_subject = len(subject_dirs)
-    for i_subject in range(0, num_subject):
-        inputDir = subject_dirs[i_subject]
-        if not args.FLAIR_only:
-            FLAIR_image = sitk.ReadImage(os.path.join(inputDir, args.FLAIR_name), imageIO="NiftiImageIO")
-            FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
-            T1_image = sitk.ReadImage(os.path.join(inputDir, args.T1_name), imageIO="NiftiImageIO")
-            T1_array = sitk.GetArrayFromImage(T1_image)
-            gt_image = sitk.ReadImage(os.path.join(inputDir, args.gt_name), imageIO="NiftiImageIO")
-            gt_array = sitk.GetArrayFromImage(gt_image)
-            [images_preproc, proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), proc_params, gt_array)  # data preprocessing
-            imgs_test = np.concatenate((images_preproc["FLAIR"], images_preproc["T1"]), axis=3)
-        else:
-            FLAIR_image = sitk.ReadImage(os.path.join(inputDir, args.FLAIR_name), imageIO="NiftiImageIO") #data preprocessing
-            FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
-            T1_array = []
-            gt_image = sitk.ReadImage(os.path.join(inputDir, args.gt_name), imageIO='NiftiImageIO')
-            gt_array = sitk.GetArrayFromImage(gt_image)
-            [images_preproc, proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), proc_params, gt_array)
-            imgs_test = images_preproc["FLAIR"]
-
-        for i_network in range(args.num_unet):
-            pred = models[i_network].predict(imgs_test, batch_size=args.batch_size, verbose=args.verbose)
-            if i_network == 0:
-                predictions = pred
-            else:
-                predictions = np.concatenate((predictions, pred), axis=3)
-
-        pred = np.mean(predictions, axis=3)
-
-        pred[pred > 0.45] = 1      #0.45 thresholding
-        pred[pred <= 0.45] = 0
-
-        pred = pred[..., np.newaxis]
-        import pdb; pdb.set_trace()
-        pred = postprocessing(FLAIR_array, pred, proc_params) # get the original size to match
-
-        filename_resultImage = os.path.join(inputDir, args.output_name)
-        output_img = sitk.GetImageFromArray(pred)
-        output_img.CopyInformation(FLAIR_image)
-        sitk.WriteImage(output_img, filename_resultImage, imageIO="NiftiImageIO")
 
 
 if __name__=='__main__':
