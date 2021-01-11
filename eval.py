@@ -66,6 +66,8 @@ class ModelEvaluator():
             search_pattern = join(self.data_path, self.pattern)
             self.subject_dirs = glob.glob(self.search_pattern)
 
+        self.num_subject = len(subject_dirs)
+
     def load_model(self):
         for i_network in range(self.i_start, self.i_start + self.args.num_unet):
             if self.FLAIR_only:
@@ -158,9 +160,11 @@ def main():
     warnings.filterwarnings("ignore")
     # images = np.load('images_three_datasets_sorted.npy')
     # masks = np.load('masks_three_datasets_sorted.npy')
+
+
     modelEval = ModelEvaluator(args)
     modelEval.load_model()
-    for i_subject in range(0, num_subject):
+    for i_subject in range(0, modelEval.num_subject):
         modelEval.predict(i_subject)
         if args.compute_metrics:
             modelEval.compute_metrics()
