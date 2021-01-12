@@ -31,7 +31,6 @@ class ModelEvaluator():
         self.output_name = args.output_name
 
         self.FLAIR_only = args.FLAIR_only
-        self.compute_metrics = args.compute_metrics
 
         #Set up image pre/post processing paramters
         self.proc_params = ProcessingParams()
