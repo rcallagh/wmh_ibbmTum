@@ -14,7 +14,7 @@ from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 from wmh.model import get_unet
 from wmh.utilities import augmentation
-from wmh.evaluation import ModelEvalutor
+from wmh.evaluation import ModelEvaluator
 from time import strftime
 
 from tensorflow.python.client import device_lib
