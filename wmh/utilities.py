@@ -198,7 +198,7 @@ def setCroppingParams(proc_params, image_shape):
         if rhs_col_min < 0:
             overstep = -rhs_col_min
             rhs_col_min = 0
-            lhs_col_max -= ovestep
+            lhs_col_max -= overstep
 
 
     else:
