@@ -75,11 +75,15 @@ def train(args, i_network):
         num_aug_sample = int(samples_num * args.aug_factor)
         rng = default_rng()
         samples = rng.integers(0, samples_num-1, (num_aug_sample,1))
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         images_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
         masks_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
         for i in range(len(samples)):
             images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[samples(i), ..., 0], images[samples(i), ..., 1], masks[samples(i), ..., 0])
+            if args.output_test_aug:
+                if i < 10:
+                    sitk.WriteImage(sitk.GetImageFromArray(images_aug[i, ..., 0]), '/SAN/medic/camino_2point0/Ross/test{}.png'.format(i))
+        exit(1)
         images = np.concatenate((images, images_aug), axis=0)
         masks = np.concatenate((masks, masks_aug), axis=0)
     # augmen, augment = augmentation(images[0,...,0], images[0,...,1], masks[0,...])
