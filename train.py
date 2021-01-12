@@ -83,7 +83,7 @@ def train(args, i_network):
         samples = rng.integers(0, samples_num-1, (num_aug_sample,1))
         # import pdb; pdb.set_trace()
         images_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
-        masks_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
+        masks_aug = np.zeros((num_aug_sample, row, col, 1), dtype=np.float32)
         for i in range(len(samples)):
             images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[int(samples[i]), ..., 0], images[int(samples[i]), ..., 1], masks[int(samples[i]), ..., 0])
             if args.output_test_aug:
