@@ -268,7 +268,7 @@ def augmentation(x_0, x_1, y):
                             [0, zy, 0],
                             [0, 0, 1]])
     augmentation_matrix = np.dot(np.dot(rotation_matrix, shear_matrix), zoom_matrix)
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     transform_matrix = transform_matrix_offset_center(augmentation_matrix, x_0.shape[0], x_0.shape[1])
     x_0 = apply_transform(x_0[..., np.newaxis], transform_matrix, channel_axis=2)
     x_1 = apply_transform(x_1[..., np.newaxis], transform_matrix, channel_axis=2)
