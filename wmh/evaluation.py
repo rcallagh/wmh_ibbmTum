@@ -135,6 +135,7 @@ class ModelEvaluator():
 
         #Read in the output image
         out_image = sitk.ReadImage(self.filename_resultImage, imageIO="NiftiImageIO")
+        out_image.CopyInformation(gt_image)
         out_image = sitk.BinaryThreshold(out_image, 0.5, 1000, 1, 0)
 
         import pdb; pdb.set_trace()
