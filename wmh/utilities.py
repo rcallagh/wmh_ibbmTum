@@ -253,3 +253,67 @@ def strip_empty_slices(FLAIR_array, proc_params, T1_array=None, gt_array=None):
         gt_array = gt_array[~zero_slice, :, :]
 
     return FLAIR_array, T1_array, gt_array, zero_slice
+
+def augmentation(x_0, x_1, y):
+
+    def transform_matrix_offset_center(matrix, x, y):
+        '''Taken from Keras 2.1.5 https://github.com/keras-team/keras/blob/2.1.5/keras/preprocessing/image.py'''
+        o_x = float(x) / 2 + 0.5
+        o_y = float(y) / 2 + 0.5
+        offset_matrix = np.array([[1, 0, o_x], [0, 1, o_y], [0, 0, 1]])
+        reset_matrix = np.array([[1, 0, -o_x], [0, 1, -o_y], [0, 0, 1]])
+        transform_matrix = np.dot(np.dot(offset_matrix, matrix), reset_matrix)
+        return transform_matrix
+
+    theta = (np.random.uniform(-15, 15) * np.pi) / 180.
+    rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
+                                [np.sin(theta), np.cos(theta), 0],
+                                [0, 0, 1]])
+    shear = np.random.uniform(-.1, .1)
+    shear_matrix = np.array([[1, -np.sin(shear), 0],
+                             [0, np.cos(shear), 0],
+                             [0, 0, 1]])
+    zx, zy = np.random.uniform(.9, 1.1, 2)
+    zoom_matrix = np.array([[zx, 0, 0],
+                            [0, zy, 0],
+                            [0, 0, 1]])
+    augmentation_matrix = np.dot(np.dot(rotation_matrix, shear_matrix), zoom_matrix)
+    import pdb; pdb.set_trace()
+    transform_matrix = transform_matrix_offset_center(augmentation_matrix, x_0.shape[0], x_0.shape[1])
+    x_0 = apply_transform(x_0[..., np.newaxis], transform_matrix, channel_axis=2)
+    x_1 = apply_transform(x_1[..., np.newaxis], transform_matrix, channel_axis=2)
+    y = apply_transform(y[..., np.newaxis], transform_matrix, channel_axis=2)
+    return x_0[..., 0], x_1[..., 0], y[..., 0]
+
+def apply_transform(x,
+                    transform_matrix,
+                    channel_axis=0,
+                    fill_mode='nearest',
+                    cval=0.):
+    """Apply the image transformation specified by a matrix.
+    From Keras 2.1.5 https://github.com/keras-team/keras/blob/2.1.5/keras/preprocessing/image.py
+    # Arguments
+        x: 2D numpy array, single image.
+        transform_matrix: Numpy array specifying the geometric transformation.
+        channel_axis: Index of axis for channels in the input tensor.
+        fill_mode: Points outside the boundaries of the input
+            are filled according to the given mode
+            (one of `{'constant', 'nearest', 'reflect', 'wrap'}`).
+        cval: Value used for points outside the boundaries
+            of the input if `mode='constant'`.
+    # Returns
+        The transformed version of the input.
+    """
+    x = np.rollaxis(x, channel_axis, 0)
+    final_affine_matrix = transform_matrix[:2, :2]
+    final_offset = transform_matrix[:2, 2]
+    channel_images = [scipy.ndimage.interpolation.affine_transform(
+        x_channel,
+        final_affine_matrix,
+        final_offset,
+        order=1,
+        mode=fill_mode,
+        cval=cval) for x_channel in x]
+    x = np.stack(channel_images, axis=0)
+    x = np.rollaxis(x, 0, channel_axis + 1)
+    return x
