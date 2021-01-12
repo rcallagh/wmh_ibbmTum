@@ -76,9 +76,9 @@ def train(args, i_network):
 
     #Augmentation
     if not args.no_aug:
-        if args.verbose > 0:
-            print('Augmenting data')
         num_aug_sample = int(samples_num * args.aug_factor)
+        if args.verbose > 0:
+            print('Augmenting data with {} samples'.format(num_aug_sample))
         rng = default_rng()
         samples = rng.integers(0, samples_num-1, (num_aug_sample,1))
         # import pdb; pdb.set_trace()
