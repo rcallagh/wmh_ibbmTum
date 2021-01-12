@@ -79,6 +79,7 @@ def train(args, i_network):
         images_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
         masks_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
         for i in range(len(samples)):
+            import pdb; pdb.set_trace()
             images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[samples[i], ..., 0], images[samples[i], ..., 1], masks[samples[i], ..., 0])
             if args.output_test_aug:
                 if i < 10:
