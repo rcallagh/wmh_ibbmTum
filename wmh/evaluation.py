@@ -137,7 +137,7 @@ class ModelEvaluator():
         out_image = sitk.ReadImage(self.filename_resultImage, imageIO="NiftiImageIO")
         import pdb; pdb.set_trace()
         DSC = getDSC(gt_image, out_image)
-        h95 = getHausdorff(gt_image, out_image)
+        # h95 = getHausdorff(gt_image, out_image) #Apparently a problem in python 3 with HD
         recall, f1 = getLesionDetection(gt_image, out_image)
         AVD = getAVD(gt_image, out_image)
 
