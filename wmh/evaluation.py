@@ -138,6 +138,9 @@ class ModelEvaluator():
         out_image.CopyInformation(gt_image)
         out_image = sitk.BinaryThreshold(out_image, 0.5, 1000, 1, 0)
 
+        scipy.io.savemat(os.path.join(subjectDir, 'gt_npy.mat'), {'gt':sitk.GetArrayFromImage(gt_image)})
+        scipy.io.savemat(os.path.join(subjectDir, 'out_npy.mat'), {'out':sitk.GetArrayFromImage(out_image)})
+
         import pdb; pdb.set_trace()
         DSC = getDSC(gt_image, out_image)
         # h95 = getHausdorff(gt_image, out_image) #Apparently a problem in python 3 with HD
