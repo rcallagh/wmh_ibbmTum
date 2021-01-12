@@ -88,8 +88,9 @@ def train(args, i_network):
             images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[int(samples[i]), ..., 0], images[int(samples[i]), ..., 1], masks[int(samples[i]), ..., 0])
             if args.output_test_aug:
                 if i < 10:
-                    sio.savemat('/SAN/medic/camino_2point0/Ross/test{}.mat'.format(i), {'img_aug':images_aug[i, ..., 0]})
-        # exit(1)
+                    sio.savemat('/SAN/medic/camino_2point0/Ross/test_img{}.mat'.format(i), {'img_aug':images_aug[i, ..., 0]})
+                    sio.savemat('/SAN/medic/camino_2point0/Ross/test_mask{}.mat'.format(i), {'mask_aug':masks_aug[i, ..., 0]})
+        import pdb; pdb.set_trace()
         images = np.concatenate((images, images_aug), axis=0)
         masks = np.concatenate((masks, masks_aug), axis=0)
     # augmen, augment = augmentation(images[0,...,0], images[0,...,1], masks[0,...])
