@@ -39,13 +39,15 @@ print('Done the tensoflow stuff')
 
 def train(args, i_network):
     #Load in training dataset
-    print('Loading data')
+    if args.verbose > 0:
+        print('Loading data')
     f = h5py.File(args.hdf5_name_train)
     images = np.array(f['image_dataset'])
     masks = np.array(f['gt_dataset'])
     # subject = f['subject']
     f.close()
-    print('Loaded data')
+    if args.verbose > 0:
+        print('Loaded data')
 
 
     #If resuming, set up path to load in previous state
@@ -60,7 +62,8 @@ def train(args, i_network):
         os.popen('cp {}.h5 {}_orig_{}.h5'.format(weight_str, weight_str, strftime('%d-%m-%y_%H%M')))
 
         weight_path = weight_str + '.h5'
-    print('loaded model')
+    if args.verbose > 0:
+        print('loaded model')
 
     num_channel = 2
     if args.FLAIR_only:
@@ -73,6 +76,8 @@ def train(args, i_network):
 
     #Augmentation
     if not args.no_aug:
+        if args.verbose > 0:
+            print('Augmenting data')
         num_aug_sample = int(samples_num * args.aug_factor)
         rng = default_rng()
         samples = rng.integers(0, samples_num-1, (num_aug_sample,1))
@@ -84,7 +89,7 @@ def train(args, i_network):
             if args.output_test_aug:
                 if i < 10:
                     sio.savemat('/SAN/medic/camino_2point0/Ross/test{}.mat'.format(i), {'img_aug':images_aug[i, ..., 0]})
-        exit(1)
+        # exit(1)
         images = np.concatenate((images, images_aug), axis=0)
         masks = np.concatenate((masks, masks_aug), axis=0)
     # augmen, augment = augmentation(images[0,...,0], images[0,...,1], masks[0,...])
