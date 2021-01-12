@@ -255,16 +255,6 @@ def strip_empty_slices(FLAIR_array, proc_params, T1_array=None, gt_array=None):
     return FLAIR_array, T1_array, gt_array, zero_slice
 
 def augmentation(x_0, x_1, y):
-
-    def transform_matrix_offset_center(matrix, x, y):
-        '''Taken from Keras 2.1.5 https://github.com/keras-team/keras/blob/2.1.5/keras/preprocessing/image.py'''
-        o_x = float(x) / 2 + 0.5
-        o_y = float(y) / 2 + 0.5
-        offset_matrix = np.array([[1, 0, o_x], [0, 1, o_y], [0, 0, 1]])
-        reset_matrix = np.array([[1, 0, -o_x], [0, 1, -o_y], [0, 0, 1]])
-        transform_matrix = np.dot(np.dot(offset_matrix, matrix), reset_matrix)
-        return transform_matrix
-
     theta = (np.random.uniform(-15, 15) * np.pi) / 180.
     rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
                                 [np.sin(theta), np.cos(theta), 0],
@@ -284,6 +274,15 @@ def augmentation(x_0, x_1, y):
     x_1 = apply_transform(x_1[..., np.newaxis], transform_matrix, channel_axis=2)
     y = apply_transform(y[..., np.newaxis], transform_matrix, channel_axis=2)
     return x_0[..., 0], x_1[..., 0], y[..., 0]
+
+def transform_matrix_offset_center(matrix, x, y):
+    '''Taken from Keras 2.1.5 https://github.com/keras-team/keras/blob/2.1.5/keras/preprocessing/image.py'''
+    o_x = float(x) / 2 + 0.5
+    o_y = float(y) / 2 + 0.5
+    offset_matrix = np.array([[1, 0, o_x], [0, 1, o_y], [0, 0, 1]])
+    reset_matrix = np.array([[1, 0, -o_x], [0, 1, -o_y], [0, 0, 1]])
+    transform_matrix = np.dot(np.dot(offset_matrix, matrix), reset_matrix)
+    return transform_matrix
 
 def apply_transform(x,
                     transform_matrix,
