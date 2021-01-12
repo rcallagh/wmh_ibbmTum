@@ -83,7 +83,7 @@ def train(args, i_network):
             images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[int(samples[i]), ..., 0], images[int(samples[i]), ..., 1], masks[int(samples[i]), ..., 0])
             if args.output_test_aug:
                 if i < 10:
-                    sio.savemet(images_aug[i, ..., 0],  '/SAN/medic/camino_2point0/Ross/test{}.png'.format(i))
+                    sio.savemat(images_aug[i, ..., 0],  '/SAN/medic/camino_2point0/Ross/test{}.png'.format(i))
         exit(1)
         images = np.concatenate((images, images_aug), axis=0)
         masks = np.concatenate((masks, masks_aug), axis=0)
