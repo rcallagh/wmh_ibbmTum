@@ -135,6 +135,8 @@ class ModelEvaluator():
 
         #Read in the output image
         out_image = sitk.ReadImage(self.filename_resultImage, imageIO="NiftiImageIO")
+        out_image = sitk.BinaryThreshold(out_image, 0.5, 1000, 1, 0)
+
         import pdb; pdb.set_trace()
         DSC = getDSC(gt_image, out_image)
         # h95 = getHausdorff(gt_image, out_image) #Apparently a problem in python 3 with HD
