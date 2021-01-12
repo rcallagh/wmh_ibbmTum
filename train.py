@@ -2,6 +2,7 @@
 
 import os
 import numpy as np
+from numpy.random import default_rng
 import tensorflow as tf
 import warnings
 import h5py
@@ -9,10 +10,11 @@ import SimpleITK as sitk
 import scipy.spatial
 from keras.models import Model
 from keras.optimizers import Adam
-from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 from wmh.model import get_unet
+from wmh.utilities import augmentation
+from wmh.evaluation import ModelEvalutor
 from time import strftime
 
 from tensorflow.python.client import device_lib
@@ -44,18 +46,6 @@ def train(args, i_network):
     f.close()
     print('Loaded data')
 
-    #Set up on the fly augmentation
-    if args.no_aug:
-        img_gen = ImageDataGenerator(
-            validation_split=0.2
-        )
-    else:
-        img_gen = ImageDataGenerator(
-            rotation_range=15,
-            zoom_range=0.1,
-            shear_range=18,
-            validation_split=0.2
-        )
 
     #If resuming, set up path to load in previous state
     weight_path = None
@@ -80,6 +70,20 @@ def train(args, i_network):
     col = images.shape[2]
     img_shape = (row, col, num_channel)
 
+    #Augmentation
+    if not args.no_aug:
+        num_aug_sample = int(samples_num * args.aug_factor)
+        rng = default_rng()
+        samples = rng.integers(0, samples_num-1, (num_aug_sample,1))
+        import pdb; pdb.set_trace()
+        images_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
+        masks_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
+        for i in range(len(samples)):
+            images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[samples(i), ..., 0], images[samples(i), ..., 1], masks[samples(i), ..., 0])
+        images = np.concatenate((images, images_aug), axis=0)
+        masks = np.concatenate((masks, masks_aug), axis=0)
+    # augmen, augment = augmentation(images[0,...,0], images[0,...,1], masks[0,...])
+
     #Get the unet. If weight path provided this will load in previous state
     model = get_unet(img_shape, weight_path, args.lr)
     current_epoch = 1
@@ -87,6 +91,7 @@ def train(args, i_network):
     epochs = args.epochs
     verbose = args.verbose
 
+    '''
     train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
     validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
 
@@ -104,7 +109,7 @@ def train(args, i_network):
             total+=1
             if total > 10:
                 break
-
+    '''
 
     if args.FLAIR_only:
         model_path = os.path.join(args.model_dir, 'FLAIR_only', (str(i_network) + '.h5'))
