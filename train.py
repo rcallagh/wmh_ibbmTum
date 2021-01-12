@@ -8,6 +8,7 @@ import warnings
 import h5py
 import SimpleITK as sitk
 import scipy.spatial
+import scipy.io as sio
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
@@ -82,7 +83,7 @@ def train(args, i_network):
             images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[int(samples[i]), ..., 0], images[int(samples[i]), ..., 1], masks[int(samples[i]), ..., 0])
             if args.output_test_aug:
                 if i < 10:
-                    sitk.WriteImage(sitk.GetImageFromArray(images_aug[i, ..., 0]), '/SAN/medic/camino_2point0/Ross/test{}.png'.format(i))
+                    sio.savemet(images_aug[i, ..., 0],  '/SAN/medic/camino_2point0/Ross/test{}.png'.format(i))
         exit(1)
         images = np.concatenate((images, images_aug), axis=0)
         masks = np.concatenate((masks, masks_aug), axis=0)
