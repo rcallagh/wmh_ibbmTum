@@ -7,6 +7,7 @@ import warnings
 import h5py
 import SimpleITK as sitk
 import scipy.spatial
+import scipy.io as sio
 import difflib
 from keras.models import Model
 from keras.optimizers import Adam
@@ -138,8 +139,8 @@ class ModelEvaluator():
         out_image.CopyInformation(gt_image)
         out_image = sitk.BinaryThreshold(out_image, 0.5, 1000, 1, 0)
 
-        scipy.io.savemat(os.path.join(subjectDir, 'gt_npy.mat'), {'gt':sitk.GetArrayFromImage(gt_image)})
-        scipy.io.savemat(os.path.join(subjectDir, 'out_npy.mat'), {'out':sitk.GetArrayFromImage(out_image)})
+        sio.savemat(os.path.join(subjectDir, 'gt_npy.mat'), {'gt':sitk.GetArrayFromImage(gt_image)})
+        sio.savemat(os.path.join(subjectDir, 'out_npy.mat'), {'out':sitk.GetArrayFromImage(out_image)})
 
         import pdb; pdb.set_trace()
         DSC = getDSC(gt_image, out_image)
