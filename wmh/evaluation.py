@@ -132,7 +132,6 @@ class ModelEvaluator():
         #Ground truth image, thresholded to remove the non-WMH labels
         gt_image = sitk.ReadImage(gt_filename, imageIO="NiftiImageIO")
         gt_image = sitk.BinaryThreshold(gt_image, 0.5, 1.5, 1, 0)
-        gt_image = sitk.BinaryThreshold(gt_image, 1.5, 2.5, 0, 1)
 
         #Read in the output image
         out_image = sitk.ReadImage(self.filename_resultImage, imageIO="NiftiImageIO")
