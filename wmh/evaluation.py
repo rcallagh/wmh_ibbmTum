@@ -7,6 +7,7 @@ import warnings
 import h5py
 import SimpleITK as sitk
 import scipy.spatial
+import difflib
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
@@ -14,7 +15,6 @@ from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 from wmh.model import get_unet
 from wmh.utilities import preprocessing, postprocessing, ProcessingParams
-from evaluation import getDSC, getHausdorff, getLesionDetection, getAVD
 
 
 class ModelEvaluator():
@@ -41,6 +41,13 @@ class ModelEvaluator():
         self.pred = []
         self.filename_resultImage = ""
 
+        #Arrays to store scores
+        self.DSC = []
+        self.Hausdorff = []
+        self.recall = []
+        self.f1 = []
+        self.AVD = []
+
         #Set up subject directories
         if args.csv_file is not None:
             with open(args.csv_file, "r") as s_dirs:
@@ -66,6 +73,7 @@ class ModelEvaluator():
 
     def predict(self, i_subject):
         inputDir = self.subject_dirs[i_subject]
+        self.last_subject = inputDir
         print('Predicting WMH on subject: ' + inputDir)
         if not self.FLAIR_only:
             FLAIR_image = sitk.ReadImage(os.path.join(inputDir, self.FLAIR_name), imageIO="NiftiImageIO")
@@ -112,8 +120,32 @@ class ModelEvaluator():
         output_img.CopyInformation(FLAIR_image)
         sitk.WriteImage(output_img, self.filename_resultImage, imageIO="NiftiImageIO")
 
-    def compute_metrics():
-        pass
+    def compute_metrics(self, i_subject=None):
+        if i_subject is None:
+            subjectDir = self.last_subject
+        else:
+            subjectDir = self.subject_dirs[i_subject]
+
+        gt_filename = os.path.join(subjectDir, self.gt_name)
+
+        #Ground truth image, thresholded to remove the non-WMH labels
+        gt_image = sitk.ReadImage(gt_filename, imageIO="NiftiImageIO")
+        gt_image = sitk.BinaryThreshold(gt_image, 0.5, 1.5, 1, 0)
+        gt_image = sitk.BinaryThreshold(gt_image, 1.5, 2.5, 0, 1)
+
+        #Read in the output image
+        out_image = sitk.ReadImage(out_filename, imageIO="NiftiImageIO")
+        import pdb; pdb.set_trace()
+        DSC = getDSC(gt_image, out_image)
+        h95 = getHausdorff(gt_image, out_image)
+        recall, f1 = getLesionDetection(gt_image, out_image)
+        AVD = getAVD(gt_image, out_image)
+
+
+
+
+
+
 #----------------------------------------------------
 # Evaluation functions from evaluation.py in original sysu_media repo, proided by MICCAI WMH challenge
 # ---------------------------------------------------
