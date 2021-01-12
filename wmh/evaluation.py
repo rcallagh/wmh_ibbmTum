@@ -15,6 +15,7 @@ from keras.callbacks import ModelCheckpoint
 from keras import backend as K
 from wmh.model import get_unet
 from wmh.utilities import preprocessing, postprocessing, ProcessingParams
+import glob
 
 
 class ModelEvaluator():
@@ -52,7 +53,7 @@ class ModelEvaluator():
             with open(args.csv_file, "r") as s_dirs:
                 self.subject_dirs = [line.strip() for line in s_dirs.readlines()]
         else:
-            search_pattern = join(self.data_path, self.pattern)
+            search_pattern = os.path.join(self.data_path, self.pattern)
             self.subject_dirs = glob.glob(self.search_pattern)
 
         self.num_subject = len(self.subject_dirs)
@@ -133,13 +134,12 @@ class ModelEvaluator():
         gt_image = sitk.BinaryThreshold(gt_image, 1.5, 2.5, 0, 1)
 
         #Read in the output image
-        out_image = sitk.ReadImage(out_filename, imageIO="NiftiImageIO")
+        out_image = sitk.ReadImage(self.filename_resultImage, imageIO="NiftiImageIO")
         import pdb; pdb.set_trace()
         DSC = getDSC(gt_image, out_image)
         h95 = getHausdorff(gt_image, out_image)
         recall, f1 = getLesionDetection(gt_image, out_image)
         AVD = getAVD(gt_image, out_image)
-
 
 
 
