@@ -90,10 +90,9 @@ def train(args, i_network):
                 if i < 10:
                     sio.savemat('/SAN/medic/camino_2point0/Ross/test_img{}.mat'.format(i), {'img_aug':images_aug[i, ..., 0]})
                     sio.savemat('/SAN/medic/camino_2point0/Ross/test_mask{}.mat'.format(i), {'mask_aug':masks_aug[i, ..., 0]})
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         images = np.concatenate((images, images_aug), axis=0)
         masks = np.concatenate((masks, masks_aug), axis=0)
-    # augmen, augment = augmentation(images[0,...,0], images[0,...,1], masks[0,...])
 
     #Get the unet. If weight path provided this will load in previous state
     model = get_unet(img_shape, weight_path, args.lr)
