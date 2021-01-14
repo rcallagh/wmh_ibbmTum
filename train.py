@@ -39,14 +39,14 @@ print('Done the tensoflow stuff')
 
 def train(args, i_network):
     #Load in training dataset
-    if args.verbose > 0:
+    if args.verbose is not None:
         print('Loading data')
     f = h5py.File(args.hdf5_name_train)
     images = np.array(f['image_dataset'])
     masks = np.array(f['gt_dataset'])
     # subject = f['subject']
     f.close()
-    if args.verbose > 0:
+    if args.verbose is not None:
         print('Loaded data')
 
 
@@ -62,7 +62,7 @@ def train(args, i_network):
         os.popen('cp {}.h5 {}_orig_{}.h5'.format(weight_str, weight_str, strftime('%d-%m-%y_%H%M')))
 
         weight_path = weight_str + '.h5'
-    if args.verbose > 0:
+    if args.verbose is not None:
         print('loaded model')
 
     num_channel = 2
@@ -77,7 +77,7 @@ def train(args, i_network):
     #Augmentation
     if not args.no_aug:
         num_aug_sample = int(samples_num * args.aug_factor)
-        if args.verbose > 0:
+        if args.verbose is not None:
             print('Augmenting data with {} samples'.format(num_aug_sample))
         rng = default_rng()
         samples = rng.integers(0, samples_num-1, (num_aug_sample,1))
