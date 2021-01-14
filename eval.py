@@ -75,7 +75,8 @@ def main():
         modelEval.predict(i_subject)
         if args.compute_metrics:
             modelEval.compute_metrics()
-    import pdb; pdb.set_trace()
+    modelEval.write_metrics()
+    # import pdb; pdb.set_trace()
 
 
 

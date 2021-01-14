@@ -141,7 +141,7 @@ class ModelEvaluator():
         sio.savemat(os.path.join(subjectDir, 'gt_npy.mat'), {'gt':sitk.GetArrayFromImage(gt_image)})
         sio.savemat(os.path.join(subjectDir, 'out_npy.mat'), {'out':sitk.GetArrayFromImage(out_image)})
 
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         DSC = getDSC(gt_image, out_image)
         # h95 = getHausdorff(gt_image, out_image) #Apparently a problem in python 3 with HD
         recall, f1 = getLesionDetection(gt_image, out_image)
@@ -157,6 +157,13 @@ class ModelEvaluator():
             print('Recall     : {:.3f}'.format(recall))
             print('F1         : {:.3f}'.format(f1))
             print('Volume Diff: {:.3f}'.format(AVD))
+
+    def write_metrics(self):
+        import pdb; pdb.set_trace()
+        tokens = self.subject_dirs[0].split('/')
+        metric_path = os.path.join(tokens[0:-2])
+        metric_path = os.path.join(metric_path, 'metrics.csv')
+
 
 
 
