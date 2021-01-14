@@ -43,6 +43,8 @@ class ModelEvaluator():
         self.pred = []
         self.filename_resultImage = ""
 
+        self.no_failed = 0
+
         #Arrays to store scores
         self.DSC = []
         self.Hausdorff = []
@@ -77,50 +79,55 @@ class ModelEvaluator():
         inputDir = self.subject_dirs[i_subject]
         self.last_subject = inputDir
         print('Predicting WMH on subject: ' + inputDir)
-        if not self.FLAIR_only:
-            FLAIR_image = sitk.ReadImage(os.path.join(inputDir, self.FLAIR_name), imageIO="NiftiImageIO")
-            FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
-            T1_image = sitk.ReadImage(os.path.join(inputDir, self.T1_name), imageIO="NiftiImageIO")
-            T1_array = sitk.GetArrayFromImage(T1_image)
-            # if self.compute_metrics:
-                # gt_image = sitk.ReadImage(os.path.join(inputDir, self.gt_name), imageIO="NiftiImageIO")
-                # gt_array = sitk.GetArrayFromImage(gt_image)
-            # else:
-                # gt_array = []
-            [images_preproc, self.proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), self.proc_params)  # data preprocessing
-            self.imgs_test = np.concatenate((images_preproc["FLAIR"], images_preproc["T1"]), axis=3)
-        else:
-            FLAIR_image = sitk.ReadImage(os.path.join(inputDir, self.FLAIR_name), imageIO="NiftiImageIO") #data preprocessing
-            FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
-            T1_array = []
-            # if self.compute_metrics:
-                # gt_image = sitk.ReadImage(os.path.join(inputDir, self.gt_name), imageIO='NiftiImageIO')
-                # gt_array = sitk.GetArrayFromImage(gt_image)
-            # else:
-                # gt_array = []
-            [images_preproc, self.proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), self.proc_params)
-            self.imgs_test = images_preproc["FLAIR"]
-
-        for i_network in range(self.args.num_unet):
-            pred = self.models[i_network].predict(self.imgs_test, batch_size=self.args.batch_size, verbose=self.args.verbose)
-            if i_network == 0:
-                predictions = pred
+        try:
+            if not self.FLAIR_only:
+                FLAIR_image = sitk.ReadImage(os.path.join(inputDir, self.FLAIR_name), imageIO="NiftiImageIO")
+                FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
+                T1_image = sitk.ReadImage(os.path.join(inputDir, self.T1_name), imageIO="NiftiImageIO")
+                T1_array = sitk.GetArrayFromImage(T1_image)
+                # if self.compute_metrics:
+                    # gt_image = sitk.ReadImage(os.path.join(inputDir, self.gt_name), imageIO="NiftiImageIO")
+                    # gt_array = sitk.GetArrayFromImage(gt_image)
+                # else:
+                    # gt_array = []
+                [images_preproc, self.proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), self.proc_params)  # data preprocessing
+                self.imgs_test = np.concatenate((images_preproc["FLAIR"], images_preproc["T1"]), axis=3)
             else:
-                predictions = np.concatenate((predictions, pred), axis=3)
+                FLAIR_image = sitk.ReadImage(os.path.join(inputDir, self.FLAIR_name), imageIO="NiftiImageIO") #data preprocessing
+                FLAIR_array = sitk.GetArrayFromImage(FLAIR_image)
+                T1_array = []
+                # if self.compute_metrics:
+                    # gt_image = sitk.ReadImage(os.path.join(inputDir, self.gt_name), imageIO='NiftiImageIO')
+                    # gt_array = sitk.GetArrayFromImage(gt_image)
+                # else:
+                    # gt_array = []
+                [images_preproc, self.proc_params] = preprocessing(np.float32(FLAIR_array), np.float32(T1_array), self.proc_params)
+                self.imgs_test = images_preproc["FLAIR"]
 
-        self.pred = np.mean(predictions, axis=3)
+            for i_network in range(self.args.num_unet):
+                pred = self.models[i_network].predict(self.imgs_test, batch_size=self.args.batch_size, verbose=self.args.verbose)
+                if i_network == 0:
+                    predictions = pred
+                else:
+                    predictions = np.concatenate((predictions, pred), axis=3)
 
-        self.pred[self.pred > 0.45] = 1      #0.45 thresholding
-        self.pred[self.pred <= 0.45] = 0
+            self.pred = np.mean(predictions, axis=3)
 
-        self.pred = self.pred[..., np.newaxis]
-        # import pdb; pdb.set_trace()
-        self.pred = postprocessing(FLAIR_array, self.pred, self.proc_params) # get the original size to match
+            self.pred[self.pred > 0.45] = 1      #0.45 thresholding
+            self.pred[self.pred <= 0.45] = 0
 
-        self.filename_resultImage = os.path.join(inputDir, self.args.output_name)
-        output_img = sitk.GetImageFromArray(self.pred)
-        output_img.CopyInformation(FLAIR_image)
-        sitk.WriteImage(output_img, self.filename_resultImage, imageIO="NiftiImageIO")
+            self.pred = self.pred[..., np.newaxis]
+            # import pdb; pdb.set_trace()
+            self.pred = postprocessing(FLAIR_array, self.pred, self.proc_params) # get the original size to match
+
+            self.filename_resultImage = os.path.join(inputDir, self.args.output_name)
+            output_img = sitk.GetImageFromArray(self.pred)
+            output_img.CopyInformation(FLAIR_image)
+            sitk.WriteImage(output_img, self.filename_resultImage, imageIO="NiftiImageIO")
+
+        except:
+            print('Could not predict for subject {}'.format(inputDir))
+            self.no_failed += 1
 
     def compute_metrics(self, i_subject=None):
         if i_subject is None:
@@ -182,6 +189,7 @@ class ModelEvaluator():
         summary_path = os.path.join(metric_path, 'metric_summary.txt')
         with open(summary_path, mode="w") as summary_file:
             summary_file.write("No. Subjects: {}\n".format(len(self.subject_dirs)))
+            summary_file.write("No. Failed  : {}\n".format(self.no_failed))
             summary_file.write("Dice Score  : {:3f} (+- {:3f})\n".format(np.nanmean(self.DSC), np.nanstd(self.DSC)))
             summary_file.write("Recall      : {:3f} (+- {:3f})\n".format(np.nanmean(self.recall), np.nanstd(self.recall)))
             summary_file.write("F1          : {:3f} (+- {:3f})\n".format(np.nanmean(self.f1), np.nanstd(self.f1)))
