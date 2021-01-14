@@ -9,6 +9,7 @@ import SimpleITK as sitk
 import scipy.spatial
 import scipy.io as sio
 import difflib
+import csv
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
@@ -162,10 +163,21 @@ class ModelEvaluator():
         import pdb; pdb.set_trace()
         tokens = self.subject_dirs[0].split('/')
         metric_path = "/".join(tokens[0:-2])
-        metric_path = os.path.join(metric_path, 'metrics.csv')
+        all_metric_path = os.path.join(metric_path, 'metrics.csv')
 
+        with open(all_metric_path, mode='w') as metric_file:
+            csv_writer = csv.writer(metric_file, delimiter=',')
+            csv_writer.writerow(['subject_dir', 'DSC', 'Recall', 'F1', 'AVD'])
+            for i in range(len(self.subject_dirs)):
+                csv_writer.writerow([self.subject_dirs[i], self.DSC[i], self.recall[i], self.f1[i], self.AVD[i]])
 
-
+        summary_path = os.path.join(metric_path, 'metric_summary.txt')
+        with open(summary_path, mode="w") as summary_file:
+            summary_file.write("No. Subjects: {}\n".format(len(self.subject_dirs)))
+            summary_file.write("Dice Score  : {:3f} (+- {:3f})\n".format(np.mean(self.DSC), np.std(self.DSC)))
+            summary_file.write("Recall      : {:3f} (+- {:3f})\n".format(np.mean(self.recall), np.std(self.recall)))
+            summary_file.write("F1          : {:3f} (+- {:3f})\n".format(np.mean(self.f1), np.std(self.f1)))
+            summary_file.write("Volume Diff : {:3f} (+- {:3f})".format(np.mean(self.AVD), np.std(self.AVD)))
 
 
 
