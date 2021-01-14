@@ -147,6 +147,11 @@ class ModelEvaluator():
         recall, f1 = getLesionDetection(gt_image, out_image)
         AVD = getAVD(gt_image, out_image)
 
+        self.DSC.append(DSC)
+        self.recall.append(recall)
+        self.f1.append(f1)
+        self.AVD.append(AVD)
+
         if self.args.verbose is not None:
             print('Dice Score : {:.3f}'.format(DSC))
             print('Recall     : {:.3f}'.format(recall))
