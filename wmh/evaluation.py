@@ -160,7 +160,7 @@ class ModelEvaluator():
             print('Volume Diff: {:.3f}'.format(AVD))
 
     def write_metrics(self):
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         tokens = self.subject_dirs[0].split('/')
         metric_path = "/".join(tokens[0:-2])
         all_metric_path = os.path.join(metric_path, 'metrics.csv')
