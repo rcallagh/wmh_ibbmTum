@@ -130,34 +130,42 @@ class ModelEvaluator():
 
         gt_filename = os.path.join(subjectDir, self.gt_name)
 
-        #Ground truth image, thresholded to remove the non-WMH labels
-        gt_image = sitk.ReadImage(gt_filename, imageIO="NiftiImageIO")
-        gt_image = sitk.BinaryThreshold(gt_image, 0.5, 1.5, 1, 0)
+        try:
+            #Ground truth image, thresholded to remove the non-WMH labels
+            gt_image = sitk.ReadImage(gt_filename, imageIO="NiftiImageIO")
+            gt_image = sitk.BinaryThreshold(gt_image, 0.5, 1.5, 1, 0)
 
-        #Read in the output image
-        out_image = sitk.ReadImage(self.filename_resultImage, imageIO="NiftiImageIO")
-        out_image.CopyInformation(gt_image)
-        out_image = sitk.BinaryThreshold(out_image, 0.5, 1000, 1, 0)
+            #Read in the output image
+            out_image = sitk.ReadImage(self.filename_resultImage, imageIO="NiftiImageIO")
+            out_image.CopyInformation(gt_image)
+            out_image = sitk.BinaryThreshold(out_image, 0.5, 1000, 1, 0)
 
-        sio.savemat(os.path.join(subjectDir, 'gt_npy.mat'), {'gt':sitk.GetArrayFromImage(gt_image)})
-        sio.savemat(os.path.join(subjectDir, 'out_npy.mat'), {'out':sitk.GetArrayFromImage(out_image)})
+            sio.savemat(os.path.join(subjectDir, 'gt_npy.mat'), {'gt':sitk.GetArrayFromImage(gt_image)})
+            sio.savemat(os.path.join(subjectDir, 'out_npy.mat'), {'out':sitk.GetArrayFromImage(out_image)})
 
-        # import pdb; pdb.set_trace()
-        DSC = getDSC(gt_image, out_image)
-        # h95 = getHausdorff(gt_image, out_image) #Apparently a problem in python 3 with HD
-        recall, f1 = getLesionDetection(gt_image, out_image)
-        AVD = getAVD(gt_image, out_image)
+            # import pdb; pdb.set_trace()
+            DSC = getDSC(gt_image, out_image)
+            # h95 = getHausdorff(gt_image, out_image) #Apparently a problem in python 3 with HD
+            recall, f1 = getLesionDetection(gt_image, out_image)
+            AVD = getAVD(gt_image, out_image)
 
-        self.DSC.append(DSC)
-        self.recall.append(recall)
-        self.f1.append(f1)
-        self.AVD.append(AVD)
+            self.DSC.append(DSC)
+            self.recall.append(recall)
+            self.f1.append(f1)
+            self.AVD.append(AVD)
 
-        if self.args.verbose is not None:
-            print('Dice Score : {:.3f}'.format(DSC))
-            print('Recall     : {:.3f}'.format(recall))
-            print('F1         : {:.3f}'.format(f1))
-            print('Volume Diff: {:.3f}'.format(AVD))
+            if self.args.verbose is not None:
+                print('Dice Score : {:.3f}'.format(DSC))
+                print('Recall     : {:.3f}'.format(recall))
+                print('F1         : {:.3f}'.format(f1))
+                print('Volume Diff: {:.3f}'.format(AVD))
+
+        except:
+            print('Could not compute metrics for {}'.format(subjectDir))
+            self.DSC.append(np.nan)
+            self.recall.append(np.nan)
+            self.f1.append(np.nan)
+            self.AVD.append(np.nan)
 
     def write_metrics(self):
         # import pdb; pdb.set_trace()
@@ -174,10 +182,10 @@ class ModelEvaluator():
         summary_path = os.path.join(metric_path, 'metric_summary.txt')
         with open(summary_path, mode="w") as summary_file:
             summary_file.write("No. Subjects: {}\n".format(len(self.subject_dirs)))
-            summary_file.write("Dice Score  : {:3f} (+- {:3f})\n".format(np.mean(self.DSC), np.std(self.DSC)))
-            summary_file.write("Recall      : {:3f} (+- {:3f})\n".format(np.mean(self.recall), np.std(self.recall)))
-            summary_file.write("F1          : {:3f} (+- {:3f})\n".format(np.mean(self.f1), np.std(self.f1)))
-            summary_file.write("Volume Diff : {:3f} (+- {:3f})".format(np.mean(self.AVD), np.std(self.AVD)))
+            summary_file.write("Dice Score  : {:3f} (+- {:3f})\n".format(np.nanmean(self.DSC), np.nanstd(self.DSC)))
+            summary_file.write("Recall      : {:3f} (+- {:3f})\n".format(np.nanmean(self.recall), np.nanstd(self.recall)))
+            summary_file.write("F1          : {:3f} (+- {:3f})\n".format(np.nanmean(self.f1), np.nanstd(self.f1)))
+            summary_file.write("Volume Diff : {:3f} (+- {:3f})".format(np.nanmean(self.AVD), np.nanstd(self.AVD)))
 
 
 
