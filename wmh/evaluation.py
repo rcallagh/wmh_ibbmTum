@@ -148,10 +148,10 @@ class ModelEvaluator():
         AVD = getAVD(gt_image, out_image)
 
         if self.args.verbose is not None:
-            print('Dice Score : {.2f}'.format(DSC))
-            print('Recall     : {.2f}'.format(recall))
-            print('F1         : {.2f}'.format(f1))
-            print('Volume Diff: {.2f}'.format(AVD))
+            print('Dice Score : {:.3f}'.format(DSC))
+            print('Recall     : {:.3f}'.format(recall))
+            print('F1         : {:.3f}'.format(f1))
+            print('Volume Diff: {:.3f}'.format(AVD))
 
 
 
