@@ -147,6 +147,12 @@ class ModelEvaluator():
         recall, f1 = getLesionDetection(gt_image, out_image)
         AVD = getAVD(gt_image, out_image)
 
+        if self.args.verbose > 0:
+            print('Dice Score : {.2f}'.format(DSC))
+            print('Recall     : {.2f}'.format(recall))
+            print('F1         : {.2f}'.format(f1))
+            print('Volume Diff: {.2f}'.format(AVD))
+
 
 
 
