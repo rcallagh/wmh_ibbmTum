@@ -41,7 +41,7 @@ def train(args, i_network):
     #Load in training dataset
     if args.verbose is not None:
         print('Loading data')
-    f = h5py.File(args.hdf5_name_train)
+    f = h5py.File(args.hdf5_name_train, 'r', liber='latest', swmr=True)
     images = np.array(f['image_dataset'])
     masks = np.array(f['gt_dataset'])
     # subject = f['subject']
