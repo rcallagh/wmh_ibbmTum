@@ -132,7 +132,6 @@ def train(args, i_network):
 
     history = model.fit(
         dataGen,
-        validation_split=0.2,
         epochs=epochs,
         verbose=verbose,
         shuffle=True,
