@@ -27,8 +27,8 @@ class DataGenerator(Sequence):
             np.random.shuffle(self.indices)
 
     def __get_data(self, batch):
-        X = x[batch, ...]
-        y = y[batch, ...]
+        X = self.x[batch, ...]
+        y = self.y[batch, ...]
         print('in DataGenerator.__get_data')
         print(np.shape(X))
 
