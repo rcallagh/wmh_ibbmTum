@@ -102,6 +102,7 @@ def train(args, i_network):
     epochs = args.epochs
     verbose = args.verbose
 
+    dataGen = DataGenerator(images, masks, batch_size=bs, shuffle=True)
     '''
     train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
     validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
@@ -130,8 +131,7 @@ def train(args, i_network):
     callbacks_list = [checkpoint]
 
     history = model.fit(
-        images,
-        masks,
+        dataGen,
         batch_size = bs,
         validation_split=0.2,
         epochs=epochs,
