@@ -29,9 +29,10 @@ class DataGenerator(Sequence):
     def __get_data(self, batch):
         X = x[batch, ...]
         y = y[batch, ...]
-
+        print('in DataGenerator.__get_data')
+        print(np.shape(X))
 
         for i, id in enumerate(batch):
-            X[..., 0], X[..., 1], y[..., 0] = augmentation(X[..., 0], X[..., 1], y[..., 0])
+            X[i, ..., 0], X[i, ..., 1], y[i, ..., 0] = augmentation(X[i, ..., 0], X[i, ..., 1], y[i, ..., 0])
 
         return X, y
