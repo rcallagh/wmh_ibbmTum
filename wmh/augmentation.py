@@ -22,7 +22,7 @@ class DataGenerator(Sequence):
         return X, y
 
     def on_epoch_end(self):
-        self.indices = np.arange(np.shape(x)[0])
+        self.indices = np.arange(np.shape(self.x)[0])
         if self.shuffle == True:
             np.random.shuffle(self.indices)
 
