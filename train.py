@@ -16,6 +16,7 @@ from keras import backend as K
 from wmh.model import get_unet
 from wmh.utilities import augmentation
 from wmh.evaluation import ModelEvaluator
+from wmh.augmentation import DataGenerator
 from time import strftime
 
 from tensorflow.python.client import device_lib
