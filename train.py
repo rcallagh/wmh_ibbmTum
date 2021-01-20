@@ -145,8 +145,8 @@ def train(args, i_network):
     callbacks_list = [checkpoint]
 
     history = model.fit(
-        generator=dataGen_train,
-        validation_dat=dataGen_val,
+        x=dataGen_train,
+        validation_data=dataGen_val,
         epochs=epochs,
         verbose=verbose,
         shuffle=True,
