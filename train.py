@@ -82,6 +82,13 @@ def train(args, i_network):
     shuffle = not args.no_shuffle
     if shuffle:
         rng.shuffle(images, axis=0)
+
+    if (args.validation_split is not None) and (args.validation_split > 0):
+        split_idx = int(samples_num * args.validation_split)
+        partitions = {'training': np.arange(split_idx, samples_num), 'validation': np.arange(0, split_idx)}
+    else:
+        partitions = {'training': np.arange(0, samples_num)}
+
     #Augmentation
     if not args.no_aug:
         num_aug_sample = int(samples_num * args.aug_factor)
@@ -108,7 +115,8 @@ def train(args, i_network):
     epochs = args.epochs
     verbose = args.verbose
 
-    dataGen = DataGenerator(images, masks, batch_size=bs, shuffle=shuffle)
+    dataGen_train = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], batch_size=bs, shuffle=shuffle)
+    dataGen_val = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle)
     '''
     train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
     validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
@@ -137,7 +145,8 @@ def train(args, i_network):
     callbacks_list = [checkpoint]
 
     history = model.fit(
-        dataGen,
+        generator=dataGen_train,
+        validation_dat=dataGen_val,
         epochs=epochs,
         verbose=verbose,
         shuffle=True,
