@@ -117,25 +117,16 @@ def train(args, i_network):
 
     dataGen_train = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], batch_size=bs, shuffle=shuffle)
     dataGen_val = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle)
-    '''
-    train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
-    validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
+
 
     if args.output_test_aug:
-        aug_test_img = img_gen.flow(images, batch_size=1, seed=1234, subset='training',save_to_dir=args.model_dir,save_prefix='img', save_format='png')
-        total = 0
-        for image in aug_test_img:
-            total+=1
-            if total > 10:
-                break
+        dataGen_train_aug_test = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], batch_size=bs, shuffle=shuffle)
+        for i in range(10):
+            img_i, mask_i = dataGen_train_aug_test.__getitem__(i)
+            sio.savemat('/SAN/medic/camino_2point0/Ross/test_img{}.mat'.format(i), {'img_aug':img_i[..., 0]})
+            sio.savemat('/SAN/medic/camino_2point0/Ross/test_mask{}.mat'.format(i), {'mask_aug':mask_i[..., 0]})
 
-        aug_test_mask = img_gen.flow(masks, batch_size=1, seed=1234, subset='training',save_to_dir=args.model_dir,save_prefix='masks', save_format='png')
-        total = 0
-        for image in aug_test_mask:
-            total+=1
-            if total > 10:
-                break
-    '''
+
 
     if args.FLAIR_only:
         model_path = os.path.join(args.model_dir, 'FLAIR_only', (str(i_network) + '.h5'))
