@@ -75,12 +75,18 @@ def train(args, i_network):
     col = images.shape[2]
     img_shape = (row, col, num_channel)
 
+    #New style numpy random
+    rng = default_rng()
+
+    #Shuffle slices to mix up across subjects
+    shuffle = not args.no_shuffle
+    if shuffle:
+        rng.shuffle(images, axis=0)
     #Augmentation
     if not args.no_aug:
         num_aug_sample = int(samples_num * args.aug_factor)
         if args.verbose is not None:
             print('Augmenting data with {} samples'.format(num_aug_sample))
-        rng = default_rng()
         samples = rng.integers(0, samples_num-1, (num_aug_sample,1))
         # import pdb; pdb.set_trace()
         images_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
@@ -102,7 +108,7 @@ def train(args, i_network):
     epochs = args.epochs
     verbose = args.verbose
 
-    dataGen = DataGenerator(images, masks, batch_size=bs, shuffle=True)
+    dataGen = DataGenerator(images, masks, batch_size=bs, shuffle=shuffle)
     '''
     train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
     validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
@@ -173,6 +179,7 @@ def main():
     parser.add_argument('--test_ensemble', action='store_true', help='Flag to test the overall ensemble performance once all networks are trained')
     parser.add_argument('--lr', type=float, default=2e-4, help='Learning rate (default: 2e-4)')
     parser.add_argument('--output_test_aug', action='store_true', help='Flag to save 10 test images from augmentation generator')
+    parser.add_argument('--no_shuffle', action='store_true', help='Flag to not shuffle the slices during training (default is to shuffle)')
     args = parser.parse_args()
 
     warnings.filterwarnings("ignore")
