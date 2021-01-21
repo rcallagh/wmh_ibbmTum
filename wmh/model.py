@@ -9,19 +9,18 @@ import scipy.spatial
 from keras.models import Model, load_model
 from keras.layers import Input, concatenate, Conv2D, MaxPooling2D, UpSampling2D, Cropping2D, ZeroPadding2D
 from keras.optimizers import Adam
-from keras.losses import binary_crossentropy
 from evaluation import getDSC, getHausdorff, getLesionDetection, getAVD, getImages  #please download evaluation.py from the WMH website
 from keras import backend as K
 import h5py
 
 ### ----define loss function for U-net ------------
-smooth = 0.1
+smooth = 1
 def dice_coef_for_training(y_true, y_pred):
     print(np.shape(y_pred))
     y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    intersection = K.sum(K.abs(y_true_f * y_pred_f))
+    return (2. * intersection + smooth) / (K.sum(K.square(y_true_f)) + K.sum(K.square(y_pred_f)) + smooth)
 
 def dice_coef_loss(y_true, y_pred):
     print(np.shape(y_pred))
@@ -117,7 +116,7 @@ def get_unet(img_shape = None, f_weight=None, lr=2e-4):
     conv10 = Conv2D(1, 1, 1, activation='sigmoid', dim_ordering=dim_ordering)(conv9)
     model = Model(input=inputs, output=conv10)
 
-    model.compile(optimizer=Adam(lr=lr), loss=binary_crossentropy, metrics=[dice_coef_for_training])
+    model.compile(optimizer=Adam(lr=lr), loss=dice_coef_loss, metrics=[dice_coef_for_training])
 
     if f_weight is not None:
         print("Previous checkpoint only contains weights. Loading in previous weights from {}, but initial training may be poor due to lack of trained optimizer.".format(f_weight))
