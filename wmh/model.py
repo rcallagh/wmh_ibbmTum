@@ -14,7 +14,7 @@ from keras import backend as K
 import h5py
 
 ### ----define loss function for U-net ------------
-smooth = 1.
+smooth = 0.1
 def dice_coef_for_training(y_true, y_pred):
     print(np.shape(y_pred))
     y_true_f = K.flatten(y_true)
