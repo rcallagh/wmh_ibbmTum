@@ -83,10 +83,10 @@ def train(args, i_network):
 
     #Shuffle slices to mix up across subjects
     shuffle = not args.no_shuffle
-    if shuffle:
-        shuffle_indices = rng.permutation(np.arange(0, samples_num))
-        images = images[shuffle_indices, ...]
-        masks = masks[shuffle_indices, ...]
+    # if shuffle:
+        # shuffle_indices = rng.permutation(np.arange(0, samples_num))
+        # images = images[shuffle_indices, ...]
+        # masks = masks[shuffle_indices, ...]
 
     if (args.validation_split is not None) and (args.validation_split > 0):
         split_idx = int(samples_num * args.validation_split)
