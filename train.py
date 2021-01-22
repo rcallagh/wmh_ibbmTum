@@ -158,12 +158,12 @@ def train(args, i_network):
         plt_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
     # weight_str = os.path.join(args.model_dir,str(i_network))
 
-    weight_path = weight_str + '_training.png'
+    plt_path = plt_str + '_training.png'
 
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='test')
     plt.legend()
-    plt.savefig(plt_str)
+    plt.savefig(plt_path)
 
     # model_path = args.model_dir
     # if not os.path.exists(model_path):
