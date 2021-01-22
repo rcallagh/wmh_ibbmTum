@@ -12,7 +12,7 @@ import scipy.io as sio
 import matplotlib.pyplot as plt
 from keras.models import Model
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras import backend as K
 from wmh.model import get_unet
 from wmh.utilities import augmentation
@@ -135,8 +135,12 @@ def train(args, i_network):
         model_path = os.path.join(args.model_dir, 'FLAIR_only', (str(i_network) + '.h5'))
     else:
         model_path = os.path.join(args.model_dir, 'FLAIR_T1', (str(i_network) + '.h5'))
-    checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+    checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=args.verbose, save_best_only=True, mode='min')
     callbacks_list = [checkpoint]
+
+    if args.EarlyStopping:
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=args.verbose, patience=args.es_patience)
+        callbacks_list.append(es)
 
     history = model.fit(
         x=dataGen_train,
