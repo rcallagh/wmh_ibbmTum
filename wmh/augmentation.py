@@ -4,12 +4,16 @@ from keras.utils import Sequence
 from wmh.utilities import augmentation
 
 class DataGenerator(Sequence):
-    def __init__(self, x, y=None, batch_size=32, shuffle=True):
+    def __init__(self, x, y=None, aug_params=None, batch_size=32, shuffle=True):
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.indices = np.arange(np.shape(x)[0])
         self.x = x
         self.y = y
+        if aug_params is None:
+            self.aug_params = {'theta': 0, 'shear': 0, 'scale': 0}
+        else:
+            self.aug_params = aug_params
         self.on_epoch_end()
 
     def __len__(self):
@@ -33,6 +37,6 @@ class DataGenerator(Sequence):
         # print(np.shape(X))
 
         for i, id in enumerate(batch):
-            X[i, ..., 0], X[i, ..., 1], y[i, ..., 0] = augmentation(X[i, ..., 0], X[i, ..., 1], y[i, ..., 0])
+            X[i, ..., 0], X[i, ..., 1], y[i, ..., 0] = augmentation(X[i, ..., 0], X[i, ..., 1], y[i, ..., 0], aug_params=self.aug_params)
 
         return X, y

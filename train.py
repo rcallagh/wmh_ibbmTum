@@ -94,8 +94,10 @@ def train(args, i_network):
     else:
         partitions = {'training': np.arange(0, samples_num)}
 
-    #Augmentation
+    #Static Augmentation - build a bigger training database
     if not args.no_aug:
+        aug_params = {'theta': args.aug_theta, 'shear': args.aug_shear, 'scale': args.aug_scale}
+
         num_aug_sample = int(samples_num * args.aug_factor)
         if args.verbose is not None:
             print('Augmenting data with {} samples'.format(num_aug_sample))
@@ -104,7 +106,7 @@ def train(args, i_network):
         images_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
         masks_aug = np.zeros((num_aug_sample, row, col, 1), dtype=np.float32)
         for i in range(len(samples)):
-            images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[int(samples[i]), ..., 0], images[int(samples[i]), ..., 1], masks[int(samples[i]), ..., 0])
+            images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[int(samples[i]), ..., 0], images[int(samples[i]), ..., 1], masks[int(samples[i]), ..., 0], aug_params=aug_params)
             if args.output_test_aug:
                 if i < 10:
                     sio.savemat('/SAN/medic/camino_2point0/Ross/test_img{}.mat'.format(i), {'img_aug':images_aug[i, ..., 0]})
@@ -120,8 +122,8 @@ def train(args, i_network):
     epochs = args.epochs
     verbose = args.verbose
 
-    dataGen_train = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], batch_size=bs, shuffle=shuffle)
-    dataGen_val = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle)
+    dataGen_train = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
+    dataGen_val = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle) #Do not pass aug_params so as not to do the augmentation during val
 
 
     if args.output_test_aug:
@@ -199,6 +201,9 @@ def main():
     parser.add_argument('--FLAIR_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
     parser.add_argument('--no_aug', action='store_true', help="Flag to not do any augmentation")
     parser.add_argument('--aug_factor', type=float, default=1, help="Factor by which to increase dataset by using augmentation. i.e. the dataset will be x times bigger after augmentation (default: 1 (results in twice as big a dataset))")
+    parser.add_argument('--aug_theta', type=float, default=15, help='Degree of rotation to use in augmentation [degrees] (default: 15)')
+    parser.add_argument('--aug_shear', type=float, default=0.1, help='Shear factor in augmentation (default: 0.1)')
+    parser.add_argument('--aug_scale', type=float, default=0.1, help='Scaling factor in augmentation (default: 0.1)')
     parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
     parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
     parser.add_argument('--test_ensemble', action='store_true', help='Flag to test the overall ensemble performance once all networks are trained')
