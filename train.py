@@ -9,6 +9,7 @@ import h5py
 import SimpleITK as sitk
 import scipy.spatial
 import scipy.io as sio
+import matplotlib.pyplot as plt
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
@@ -145,6 +146,20 @@ def train(args, i_network):
         shuffle=True,
         callbacks = callbacks_list
     )
+
+
+    if args.FLAIR_only:
+        plt_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
+    else:
+        plt_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
+    # weight_str = os.path.join(args.model_dir,str(i_network))
+
+    weight_path = weight_str + '_training.png'
+
+    plt.plot(history.history['loss'], label='train')
+    plt.plot(history.history['val_loss'], label='test')
+    plt.legend()
+    plt.savefig(plt_str)
 
     # model_path = args.model_dir
     # if not os.path.exists(model_path):
