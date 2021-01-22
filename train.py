@@ -9,6 +9,8 @@ import h5py
 import SimpleITK as sitk
 import scipy.spatial
 import scipy.io as sio
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from keras.models import Model
 from keras.optimizers import Adam
