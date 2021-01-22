@@ -138,7 +138,7 @@ def train(args, i_network):
     checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=args.verbose, save_best_only=True, mode='min')
     callbacks_list = [checkpoint]
 
-    if args.EarlyStopping:
+    if args.early_stopping:
         es = EarlyStopping(monitor='val_loss', mode='min', verbose=args.verbose, patience=args.es_patience)
         callbacks_list.append(es)
 
