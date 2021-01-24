@@ -121,7 +121,7 @@ def train(args, i_network):
     bs = args.batch_size
     epochs = args.epochs
     verbose = args.verbose
-
+    aug_params = {'theta': args.aug_theta, 'shear': args.aug_shear, 'scale': args.aug_scale}
     dataGen_train = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
     dataGen_val = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle) #Do not pass aug_params so as not to do the augmentation during val
 
