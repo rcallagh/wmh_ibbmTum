@@ -254,16 +254,19 @@ def strip_empty_slices(FLAIR_array, proc_params, T1_array=None, gt_array=None):
 
     return FLAIR_array, T1_array, gt_array, zero_slice
 
-def augmentation(x_0, x_1, y):
-    theta = (np.random.uniform(-15, 15) * np.pi) / 180.
+def augmentation(x_0, x_1, y, aug_params=None):
+    if aug_params is None:
+        aug_params = {'theta': 0, 'shear': 0, 'scale': 0}
+
+    theta = (np.random.uniform(-aug_params['theta'], aug_params['theta']) * np.pi) / 180.
     rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0],
                                 [np.sin(theta), np.cos(theta), 0],
                                 [0, 0, 1]])
-    shear = np.random.uniform(-.1, .1)
+    shear = np.random.uniform(-aug_params['shear'], aug_params['shear'])
     shear_matrix = np.array([[1, -np.sin(shear), 0],
                              [0, np.cos(shear), 0],
                              [0, 0, 1]])
-    zx, zy = np.random.uniform(.9, 1.1, 2)
+    zx, zy = np.random.uniform(1- aug_params['scale'], 1 + aug_params['scale'], 2)
     zoom_matrix = np.array([[zx, 0, 0],
                             [0, zy, 0],
                             [0, 0, 1]])

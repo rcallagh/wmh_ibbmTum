@@ -9,13 +9,17 @@ import h5py
 import SimpleITK as sitk
 import scipy.spatial
 import scipy.io as sio
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from keras.models import Model
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras import backend as K
 from wmh.model import get_unet
 from wmh.utilities import augmentation
 from wmh.evaluation import ModelEvaluator
+from wmh.augmentation import DataGenerator
 from time import strftime
 
 from tensorflow.python.client import device_lib
@@ -74,18 +78,34 @@ def train(args, i_network):
     col = images.shape[2]
     img_shape = (row, col, num_channel)
 
-    #Augmentation
+    #New style numpy random
+    rng = default_rng()
+
+    #Shuffle slices to mix up across subjects
+    shuffle = not args.no_shuffle
+    # if shuffle:
+        # shuffle_indices = rng.permutation(np.arange(0, samples_num))
+        # images = images[shuffle_indices, ...]
+        # masks = masks[shuffle_indices, ...]
+
+    if (args.validation_split is not None) and (args.validation_split > 0):
+        split_idx = int(samples_num * args.validation_split)
+        partitions = {'training': np.arange(split_idx, samples_num), 'validation': np.arange(0, split_idx)}
+    else:
+        partitions = {'training': np.arange(0, samples_num)}
+
+    ''' Comment out old Static Augmentation - build a bigger training database
     if not args.no_aug:
+        aug_params = {'theta': args.aug_theta, 'shear': args.aug_shear, 'scale': args.aug_scale}
         num_aug_sample = int(samples_num * args.aug_factor)
         if args.verbose is not None:
             print('Augmenting data with {} samples'.format(num_aug_sample))
-        rng = default_rng()
         samples = rng.integers(0, samples_num-1, (num_aug_sample,1))
         # import pdb; pdb.set_trace()
         images_aug = np.zeros((num_aug_sample, row, col, num_channel), dtype=np.float32)
         masks_aug = np.zeros((num_aug_sample, row, col, 1), dtype=np.float32)
         for i in range(len(samples)):
-            images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[int(samples[i]), ..., 0], images[int(samples[i]), ..., 1], masks[int(samples[i]), ..., 0])
+            images_aug[i, ..., 0], images_aug[i, ..., 1], masks_aug[i, ..., 0] = augmentation(images[int(samples[i]), ..., 0], images[int(samples[i]), ..., 1], masks[int(samples[i]), ..., 0], aug_params=aug_params)
             if args.output_test_aug:
                 if i < 10:
                     sio.savemat('/SAN/medic/camino_2point0/Ross/test_img{}.mat'.format(i), {'img_aug':images_aug[i, ..., 0]})
@@ -93,6 +113,7 @@ def train(args, i_network):
         # import pdb; pdb.set_trace()
         images = np.concatenate((images, images_aug), axis=0)
         masks = np.concatenate((masks, masks_aug), axis=0)
+    '''
 
     #Get the unet. If weight path provided this will load in previous state
     model = get_unet(img_shape, weight_path, args.lr)
@@ -100,44 +121,61 @@ def train(args, i_network):
     bs = args.batch_size
     epochs = args.epochs
     verbose = args.verbose
+    if args.no_aug:
+        aug_params = {'theta': 0, 'shear': 0, 'scale': 0}
+    else:
+        aug_params = {'theta': args.aug_theta, 'shear': args.aug_shear, 'scale': args.aug_scale}
 
-    '''
-    train_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='training')
-    validation_gen = img_gen.flow(images, masks, batch_size=bs, shuffle=True, subset='validation')
+    dataGen_train = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
+    dataGen_val = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle) #Do not pass aug_params so as not to do the augmentation during val
+
 
     if args.output_test_aug:
-        aug_test_img = img_gen.flow(images, batch_size=1, seed=1234, subset='training',save_to_dir=args.model_dir,save_prefix='img', save_format='png')
-        total = 0
-        for image in aug_test_img:
-            total+=1
-            if total > 10:
-                break
+        dataGen_train_aug_test = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], batch_size=bs, shuffle=shuffle)
+        dataGen_val_aug_test = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle)
+        for i in range(10):
+            img_i, mask_i = dataGen_train_aug_test.__getitem__(i)
+            val_i, val_mask_i = dataGen_train_aug_test.__getitem__(i)
+            sio.savemat('/SAN/medic/camino_2point0/Ross/test_img{}.mat'.format(i), {'img_aug':img_i[..., 0]})
+            sio.savemat('/SAN/medic/camino_2point0/Ross/test_mask{}.mat'.format(i), {'mask_aug':mask_i[..., 0]})
+            sio.savemat('/SAN/medic/camino_2point0/Ross/test_val_img{}.mat'.format(i), {'val_aug':val_i[..., 0]})
+            sio.savemat('/SAN/medic/camino_2point0/Ross/test_val_mask{}.mat'.format(i), {'val_mask_aug':val_mask_i[..., 0]})
 
-        aug_test_mask = img_gen.flow(masks, batch_size=1, seed=1234, subset='training',save_to_dir=args.model_dir,save_prefix='masks', save_format='png')
-        total = 0
-        for image in aug_test_mask:
-            total+=1
-            if total > 10:
-                break
-    '''
+
 
     if args.FLAIR_only:
         model_path = os.path.join(args.model_dir, 'FLAIR_only', (str(i_network) + '.h5'))
     else:
         model_path = os.path.join(args.model_dir, 'FLAIR_T1', (str(i_network) + '.h5'))
-    checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+    checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=args.verbose, save_best_only=True, mode='min')
     callbacks_list = [checkpoint]
 
+    if args.early_stopping:
+        es = EarlyStopping(monitor='val_loss', mode='min', verbose=args.verbose, patience=args.es_patience)
+        callbacks_list.append(es)
+
     history = model.fit(
-        images,
-        masks,
-        batch_size = bs,
-        validation_split=0.2,
+        x=dataGen_train,
+        validation_data=dataGen_val,
         epochs=epochs,
         verbose=verbose,
         shuffle=True,
         callbacks = callbacks_list
     )
+
+
+    if args.FLAIR_only:
+        plt_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
+    else:
+        plt_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
+    # weight_str = os.path.join(args.model_dir,str(i_network))
+
+    plt_path = plt_str + '_training.png'
+
+    plt.plot(history.history['loss'], label='train')
+    plt.plot(history.history['val_loss'], label='test')
+    plt.legend()
+    plt.savefig(plt_path)
 
     # model_path = args.model_dir
     # if not os.path.exists(model_path):
@@ -164,16 +202,22 @@ def main():
     parser.add_argument('--validation_batch_size', type=int, default=30, metavar='N',help='input batch size for validation (default: 30)')
     parser.add_argument('--epochs', type=int, default=50, help='Number of epochs (default: 50)')
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Flag to use verbose training output. -v will have progress bar per epoch, -vv will print one line per epoch (use this in non-interactive runs e.g. cluster)')
+    parser.add_argument('--early_stopping', action='store_true', help='Flag to use early stopping')
+    parser.add_argument('--es_patience', type=int, default=20, help='No. epochs over which to use patience in early stopping (default: 20)')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights/', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
     parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
     parser.add_argument('--FLAIR_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
     parser.add_argument('--no_aug', action='store_true', help="Flag to not do any augmentation")
     parser.add_argument('--aug_factor', type=float, default=1, help="Factor by which to increase dataset by using augmentation. i.e. the dataset will be x times bigger after augmentation (default: 1 (results in twice as big a dataset))")
+    parser.add_argument('--aug_theta', type=float, default=15, help='Degree of rotation to use in augmentation [degrees] (default: 15)')
+    parser.add_argument('--aug_shear', type=float, default=0.1, help='Shear factor in augmentation (default: 0.1)')
+    parser.add_argument('--aug_scale', type=float, default=0.1, help='Scaling factor in augmentation (default: 0.1)')
     parser.add_argument('--num_unet', type=int, default=1, help='Number of networks to train (default: 1)')
     parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
     parser.add_argument('--test_ensemble', action='store_true', help='Flag to test the overall ensemble performance once all networks are trained')
     parser.add_argument('--lr', type=float, default=2e-4, help='Learning rate (default: 2e-4)')
     parser.add_argument('--output_test_aug', action='store_true', help='Flag to save 10 test images from augmentation generator')
+    parser.add_argument('--no_shuffle', action='store_true', help='Flag to not shuffle the slices during training (default is to shuffle)')
     args = parser.parse_args()
 
     warnings.filterwarnings("ignore")

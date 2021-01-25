@@ -14,13 +14,13 @@ from keras import backend as K
 import h5py
 
 ### ----define loss function for U-net ------------
-smooth = 1.
+smooth = 1
 def dice_coef_for_training(y_true, y_pred):
     print(np.shape(y_pred))
     y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+    intersection = K.sum(K.abs(y_true_f * y_pred_f))
+    return (2. * intersection + smooth) / (K.sum(K.square(y_true_f)) + K.sum(K.square(y_pred_f)) + smooth)
 
 def dice_coef_loss(y_true, y_pred):
     print(np.shape(y_pred))
