@@ -94,10 +94,9 @@ def train(args, i_network):
     else:
         partitions = {'training': np.arange(0, samples_num)}
 
-    #Static Augmentation - build a bigger training database
+    ''' Comment out old Static Augmentation - build a bigger training database
     if not args.no_aug:
         aug_params = {'theta': args.aug_theta, 'shear': args.aug_shear, 'scale': args.aug_scale}
-
         num_aug_sample = int(samples_num * args.aug_factor)
         if args.verbose is not None:
             print('Augmenting data with {} samples'.format(num_aug_sample))
@@ -114,6 +113,7 @@ def train(args, i_network):
         # import pdb; pdb.set_trace()
         images = np.concatenate((images, images_aug), axis=0)
         masks = np.concatenate((masks, masks_aug), axis=0)
+    '''
 
     #Get the unet. If weight path provided this will load in previous state
     model = get_unet(img_shape, weight_path, args.lr)
@@ -121,7 +121,11 @@ def train(args, i_network):
     bs = args.batch_size
     epochs = args.epochs
     verbose = args.verbose
-    aug_params = {'theta': args.aug_theta, 'shear': args.aug_shear, 'scale': args.aug_scale}
+    if args.no_aug:
+        aug_params = {'theta': 0, 'shear': 0, 'scale': 0}
+    else:
+        aug_params = {'theta': args.aug_theta, 'shear': args.aug_shear, 'scale': args.aug_scale}
+
     dataGen_train = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
     dataGen_val = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle) #Do not pass aug_params so as not to do the augmentation during val
 
