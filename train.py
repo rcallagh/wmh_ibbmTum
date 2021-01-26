@@ -146,11 +146,29 @@ def train(args, i_network):
             sio.savemat('/SAN/medic/camino_2point0/Ross/test_val_mask{}.mat'.format(i), {'val_mask_aug':val_mask_i[..., 0]})
 
 
-
+    #----------------------------------
+    # Checkpoints
+    #----------------------------------
     if args.FLAIR_only:
         model_path = os.path.join(args.model_dir, 'FLAIR_only', (str(i_network) + '.h5'))
     else:
         model_path = os.path.join(args.model_dir, 'FLAIR_T1', (str(i_network) + '.h5'))
+
+    monitor_mode = 'min'
+    if args.es_metric == 'loss':
+        monitor_str = 'val_loss'
+    elif args.es_metric == 'dice':
+        monitor_str = 'val_dice_coef_for_training'
+        monitor_mode = 'max'
+    elif args.es_metric == 'jaccard':
+        monitor_str = 'val_jaccard_loss'
+    elif args.es_metric == 'tversky':
+        monitor_str = 'val_tversky_loss'
+    elif args.es_metric == 'focal-tversky':
+        monitor_str = 'val_focal_tversky_loss'
+    else:
+        print('Could get metric for checkpoints from {}'.format(args.es_metric))
+        
     checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=args.verbose, save_best_only=True, mode='min')
     callbacks_list = [checkpoint]
 
