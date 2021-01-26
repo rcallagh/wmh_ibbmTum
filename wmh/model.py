@@ -13,19 +13,8 @@ from evaluation import getDSC, getHausdorff, getLesionDetection, getAVD, getImag
 from keras import backend as K
 import h5py
 
-### ----define loss function for U-net ------------
-smooth = 1
-def dice_coef_for_training(y_true, y_pred):
-    print(np.shape(y_pred))
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(K.abs(y_true_f * y_pred_f))
-    return (2. * intersection + smooth) / (K.sum(K.square(y_true_f)) + K.sum(K.square(y_pred_f)) + smooth)
+from wmh.losses import * #Get all the loss functions
 
-def dice_coef_loss(y_true, y_pred):
-    print(np.shape(y_pred))
-    print(np.shape(y_true))
-    return -dice_coef_for_training(y_true, y_pred)
 
 def get_crop_shape(target, refer):
         # width, the 3rd dimension
@@ -116,7 +105,7 @@ def get_unet(img_shape = None, f_weight=None, lr=2e-4):
     conv10 = Conv2D(1, 1, 1, activation='sigmoid', dim_ordering=dim_ordering)(conv9)
     model = Model(input=inputs, output=conv10)
 
-    model.compile(optimizer=Adam(lr=lr), loss=dice_coef_loss, metrics=[dice_coef_for_training])
+    model.compile(optimizer=Adam(lr=lr), loss=dice_coef_loss, metrics=[dice_coef_for_training, jaccard_distance_loss, focal_tversky, tversky_loss])
 
     if f_weight is not None:
         print("Previous checkpoint only contains weights. Loading in previous weights from {}, but initial training may be poor due to lack of trained optimizer.".format(f_weight))
