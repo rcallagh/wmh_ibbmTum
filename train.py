@@ -156,7 +156,7 @@ def train(args, i_network):
 
     if args.csv_log_name is not None:
         csvLogger = CSVLogger(args.csv_log_name)
-        callbacks_list.append(es)
+        callbacks_list.append(csvLogger)
             
         
     history = model.fit(
