@@ -154,6 +154,7 @@ def train(args, i_network):
     else:
         model_path = os.path.join(args.model_dir, 'FLAIR_T1', (str(i_network) + '.h5'))
 
+    #Get metric function
     monitor_mode = 'min'
     if args.es_metric == 'loss':
         monitor_str = 'val_loss'
@@ -161,19 +162,19 @@ def train(args, i_network):
         monitor_str = 'val_dice_coef_for_training'
         monitor_mode = 'max'
     elif args.es_metric == 'jaccard':
-        monitor_str = 'val_jaccard_loss'
+        monitor_str = 'val_jaccard_distance_loss'
     elif args.es_metric == 'tversky':
         monitor_str = 'val_tversky_loss'
     elif args.es_metric == 'focal-tversky':
-        monitor_str = 'val_focal_tversky_loss'
+        monitor_str = 'val_focal_tversky'
     else:
         print('Could get metric for checkpoints from {}'.format(args.es_metric))
         
-    checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=args.verbose, save_best_only=True, mode='min')
+    checkpoint = ModelCheckpoint(model_path, monitor=monitor_str, verbose=args.verbose, save_best_only=True, mode=monitor_mode)
     callbacks_list = [checkpoint]
 
     if args.early_stopping:
-        es = EarlyStopping(monitor='val_dice_coef_for_training', mode='min', verbose=args.verbose, patience=args.es_patience)
+        es = EarlyStopping(monitor=monitor_str, mode=monitor_mode, verbose=args.verbose, patience=args.es_patience)
         callbacks_list.append(es)
 
     if args.log_dir is not None:
