@@ -35,7 +35,7 @@ def get_crop_shape(target, refer):
         return (ch1, ch2), (cw1, cw2)
 
 ### ----define U-net architecture--------------
-def get_unet(img_shape = None, f_weight=None, lr=2e-4):
+def get_unet(img_shape = None, f_weight=None, args=None):
 
     #If we have a file name provided, check if it has the full model
     full_model = False
@@ -49,6 +49,9 @@ def get_unet(img_shape = None, f_weight=None, lr=2e-4):
         print("Loading model from {}".format(f_weight))
         model = load_model(f_weight, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef_for_training': dice_coef_for_training})
         return model
+
+    if args is not None:
+        lr = args.lr
 
     dim_ordering = 'tf'
     inputs = Input(shape = img_shape)
@@ -105,10 +108,37 @@ def get_unet(img_shape = None, f_weight=None, lr=2e-4):
     conv10 = Conv2D(1, 1, 1, activation='sigmoid', dim_ordering=dim_ordering)(conv9)
     model = Model(input=inputs, output=conv10)
 
-    model.compile(optimizer=Adam(lr=lr), loss=dice_coef_loss, metrics=[dice_coef_for_training, jaccard_distance_loss, focal_tversky, tversky_loss])
+    lossfunc = get_loss(args.loss)
+    metricfuncs = get_metrics(args)
+
+    model.compile(optimizer=Adam(lr=lr), loss=lossfunc, metrics=metricfuncs)
 
     if f_weight is not None:
         print("Previous checkpoint only contains weights. Loading in previous weights from {}, but initial training may be poor due to lack of trained optimizer.".format(f_weight))
         model.load_weights(f_weight)
 
     return model
+
+def get_loss(loss_str):
+
+    if loss_str == 'dice':
+        return dice_coef_loss
+    elif loss_str == 'dsc':
+        return dice_coef_for_training
+    elif loss_str == 'jaccard':
+        return jaccard_distance_loss
+    elif loss_str == 'tversky':
+        return tversky_loss
+    elif loss_str == 'focal-tversky':
+        return focal_tversky
+
+    else:
+        print('No loss known for {}'.format(loss_str))
+        exit(1)
+
+def get_metrics(args):
+    metrics = []
+    for metric_str in args.metrics:
+        metrics.append(get_loss(metric_str))
+
+    return metrics

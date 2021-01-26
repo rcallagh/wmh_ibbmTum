@@ -116,11 +116,15 @@ def train(args, i_network):
     '''
 
     #Get the unet. If weight path provided this will load in previous state
-    model = get_unet(img_shape, weight_path, args.lr)
+    model = get_unet(img_shape, weight_path, args)
     current_epoch = 1
     bs = args.batch_size
     epochs = args.epochs
     verbose = args.verbose
+
+    #-----------------------------------------
+    # AUGMENTATION
+    # ----------------------------------------
     if args.no_aug:
         aug_params = {'theta': 0, 'shear': 0, 'scale': 0}
     else:
@@ -142,16 +146,37 @@ def train(args, i_network):
             sio.savemat('/SAN/medic/camino_2point0/Ross/test_val_mask{}.mat'.format(i), {'val_mask_aug':val_mask_i[..., 0]})
 
 
-
+    #----------------------------------
+    # Checkpoints
+    #----------------------------------
     if args.FLAIR_only:
         model_path = os.path.join(args.model_dir, 'FLAIR_only', (str(i_network) + '.h5'))
     else:
         model_path = os.path.join(args.model_dir, 'FLAIR_T1', (str(i_network) + '.h5'))
-    checkpoint = ModelCheckpoint(model_path, monitor='val_loss', verbose=args.verbose, save_best_only=True, mode='min')
+
+    #Get metric function
+    monitor_mode = 'min'
+    if args.es_metric == 'loss':
+        monitor_str = 'val_loss'
+    elif args.es_metric == 'dice':
+        monitor_str = 'val_dice_coef_loss'
+    elif args.es_metric == 'dsc':
+        monitor_str = 'val_dice_coef_for_training'
+        monitor_mode = 'max'
+    elif args.es_metric == 'jaccard':
+        monitor_str = 'val_jaccard_distance_loss'
+    elif args.es_metric == 'tversky':
+        monitor_str = 'val_tversky_loss'
+    elif args.es_metric == 'focal-tversky':
+        monitor_str = 'val_focal_tversky'
+    else:
+        print('Could get metric for checkpoints from {}'.format(args.es_metric))
+        
+    checkpoint = ModelCheckpoint(model_path, monitor=monitor_str, verbose=args.verbose, save_best_only=True, mode=monitor_mode)
     callbacks_list = [checkpoint]
 
     if args.early_stopping:
-        es = EarlyStopping(monitor='val_dice_coef_for_training', mode='min', verbose=args.verbose, patience=args.es_patience)
+        es = EarlyStopping(monitor=monitor_str, mode=monitor_mode, verbose=args.verbose, patience=args.es_patience)
         callbacks_list.append(es)
 
     if args.log_dir is not None:
@@ -218,10 +243,13 @@ def main():
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Flag to use verbose training output. -v will have progress bar per epoch, -vv will print one line per epoch (use this in non-interactive runs e.g. cluster)')
     parser.add_argument('--early_stopping', action='store_true', help='Flag to use early stopping')
     parser.add_argument('--es_patience', type=int, default=20, help='No. epochs over which to use patience in early stopping (default: 20)')
+    parser.add_argument('--es_metric', choices=['loss', 'dice', 'dsc', 'jaccard', 'tversky', 'focal-tversky'], default='loss', help='Choice of early stopping monitoring metric (default: loss)')
     parser.add_argument('--log_dir', type=str, default=None, help='Log directory for logging of training performance. Requires --csv_log to be provided for logging (default: None)')
     parser.add_argument('--csv_log', action='store_true', help='Flag to store csv log')
     parser.add_argument('--tb_log', action='store_true', help='Flag to store tensor board log')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights/', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
+    parser.add_argument('--loss', choices=['dice', 'jaccard', 'dsc', 'tversky', 'focal-tversky'], default='dice', help='Choice of loss function (default: dice)')
+    parser.add_argument('--metrics', choices=['dice', 'jaccard', 'dsc', 'tversky', 'focal-tversky'], nargs='*', default=None, help='Choice of metric functions (default: None)')
     parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
     parser.add_argument('--FLAIR_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
     parser.add_argument('--no_aug', action='store_true', help="Flag to not do any augmentation")
