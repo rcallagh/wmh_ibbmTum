@@ -123,6 +123,8 @@ def get_loss(loss_str):
 
     if loss_str == 'dice':
         return dice_coef_loss
+    elif loss_str == 'dsc':
+        return dice_coef_for_training
     elif loss_str == 'jaccard':
         return jaccard_distance_loss
     elif loss_str == 'tversky':
