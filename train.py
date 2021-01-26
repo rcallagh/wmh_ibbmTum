@@ -166,16 +166,23 @@ def train(args, i_network):
 
     if args.FLAIR_only:
         plt_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
+        hist_str = os.path.join(args.model_dir, 'FLAIR_only', str(i_network))
     else:
         plt_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
+        hist_str = os.path.join(args.model_dir, 'FLAIR_T1', str(i_network))
+        
     # weight_str = os.path.join(args.model_dir,str(i_network))
 
+   
     plt_path = plt_str + '_training.png'
 
-    plt.plot(history.history['loss'], label='train')
-    plt.plot(history.history['val_loss'], label='test')
+    for key in history.history.keys():
+        plt.plot(history.history[key], label=key)
+        hist_path = hist_str + '_history' + key + '.csv'
+        np.savetxt(hist_path, np.array(history.history[key]), delimiter=",")
+
     plt.legend()
-    plt.savefig(plt_path)
+    plt.savefig(plt_path, dpi=200)
 
     # model_path = args.model_dir
     # if not os.path.exists(model_path):
