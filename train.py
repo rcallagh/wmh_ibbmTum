@@ -154,9 +154,11 @@ def train(args, i_network):
         es = EarlyStopping(monitor='val_dice_coef_for_training', mode='min', verbose=args.verbose, patience=args.es_patience)
         callbacks_list.append(es)
 
-    if args.csv_log_name is not None:
-        csvLogger = CSVLogger(args.csv_log_name)
-        callbacks_list.append(csvLogger)
+    if args.log_dir is not None:
+        if args.csv_log:
+            csv_log_name = os.path.join(args.log_dir, 'history_{}.csv'.format(i_network))
+            csvLogger = CSVogger(csv_log_name)
+            callbacks_list.append(csvLogger)
             
         
     history = model.fit(
@@ -212,7 +214,8 @@ def main():
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Flag to use verbose training output. -v will have progress bar per epoch, -vv will print one line per epoch (use this in non-interactive runs e.g. cluster)')
     parser.add_argument('--early_stopping', action='store_true', help='Flag to use early stopping')
     parser.add_argument('--es_patience', type=int, default=20, help='No. epochs over which to use patience in early stopping (default: 20)')
-    parser.add_argument('--csv_log_name', type=str, default=None, help='Name of file to use for CSV logging of training performance (default: None)')
+    parser.add_argument('--log_dir', type=str, default=None, help='Log directory for logging of training performance. Requires --csv_log to be provided for logging (default: None)')
+    parser.add_argument('--csv_log', action='store_true', help='Flag to store csv log')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights/', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
     parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
     parser.add_argument('--FLAIR_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
