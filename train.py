@@ -116,11 +116,15 @@ def train(args, i_network):
     '''
 
     #Get the unet. If weight path provided this will load in previous state
-    model = get_unet(img_shape, weight_path, args.lr)
+    model = get_unet(img_shape, weight_path, args)
     current_epoch = 1
     bs = args.batch_size
     epochs = args.epochs
     verbose = args.verbose
+
+    #-----------------------------------------
+    # AUGMENTATION
+    # ----------------------------------------
     if args.no_aug:
         aug_params = {'theta': 0, 'shear': 0, 'scale': 0}
     else:
