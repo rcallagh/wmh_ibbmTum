@@ -157,7 +157,7 @@ def train(args, i_network):
     if args.log_dir is not None:
         if args.csv_log:
             csv_log_name = os.path.join(args.log_dir, 'history_{}.csv'.format(i_network))
-            csvLogger = CSVogger(csv_log_name)
+            csvLogger = CSVLogger(csv_log_name)
             callbacks_list.append(csvLogger)
         if args.tb_log:
             tb_log_dir = os.path.join(args.log_dir, 'tb')
