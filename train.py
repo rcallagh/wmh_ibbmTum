@@ -151,7 +151,7 @@ def train(args, i_network):
     callbacks_list = [checkpoint]
 
     if args.early_stopping:
-        es = EarlyStopping(monitor='val_loss', mode='min', verbose=args.verbose, patience=args.es_patience)
+        es = EarlyStopping(monitor='val_dice_coef_for_training', mode='min', verbose=args.verbose, patience=args.es_patience)
         callbacks_list.append(es)
 
     history = model.fit(
