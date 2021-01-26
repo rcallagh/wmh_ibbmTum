@@ -220,6 +220,7 @@ def main():
     parser.add_argument('--es_patience', type=int, default=20, help='No. epochs over which to use patience in early stopping (default: 20)')
     parser.add_argument('--log_dir', type=str, default=None, help='Log directory for logging of training performance. Requires --csv_log to be provided for logging (default: None)')
     parser.add_argument('--csv_log', action='store_true', help='Flag to store csv log')
+    parser.add_argument('--tb_log', action='store_true', help='Flag to store tensor board log')
     parser.add_argument('--model_dir', type=str, default='./wmh/weights/', help='path to store model weights to (also path containing starting weights for --resume) (default: ./wmh/weights)')
     parser.add_argument('--resume', action='store_true', help='Flag to resume training from checkpoints.')
     parser.add_argument('--FLAIR_only', action='store_true', help='Flag whether to just use FLAIR (default (if flag not provided): use FLAIR and T1)')
