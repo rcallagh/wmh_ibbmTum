@@ -14,7 +14,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from keras.models import Model
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
+from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger, TensorBoard
 from keras import backend as K
 from wmh.model import get_unet
 from wmh.utilities import augmentation
@@ -159,7 +159,11 @@ def train(args, i_network):
             csv_log_name = os.path.join(args.log_dir, 'history_{}.csv'.format(i_network))
             csvLogger = CSVogger(csv_log_name)
             callbacks_list.append(csvLogger)
-            
+        if args.tb_log:
+            tb_log_dir = os.path.join(args.log_dir, 'tb')
+            tb = TensorBoard(log_dir=tb_log_dir)
+            callbacks_list.append(tb)
+                                        
         
     history = model.fit(
         x=dataGen_train,
