@@ -4,15 +4,6 @@ import numpy as np
 from keras import backend as K
 
 
-all_losses = {
-    'dice_coef_for_training': dice_coef_for_training,
-    'dice_coef_loss': dice_coef_loss,
-    'jaccard_distace_loss': jaccard_distance_loss,
-    'tversky': tversky,
-    'tversky_loss': tversky_loss,
-    'focal_tversky': focal_tversky
-}
-
 ### ----define loss function for U-net ------------
 smooth = 1
 def dice_coef_for_training(y_true, y_pred):
@@ -63,3 +54,14 @@ def focal_tversky(y_true,y_pred):
     pt_1 = tversky(y_true, y_pred)
     gamma = 0.75
     return K.pow((1-pt_1), gamma)
+
+
+
+all_losses = {
+    'dice_coef_for_training': dice_coef_for_training,
+    'dice_coef_loss': dice_coef_loss,
+    'jaccard_distace_loss': jaccard_distance_loss,
+    'tversky': tversky,
+    'tversky_loss': tversky_loss,
+    'focal_tversky': focal_tversky
+}
