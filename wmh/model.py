@@ -47,7 +47,7 @@ def get_unet(img_shape = None, f_weight=None, args=None):
 
     if full_model:
         print("Loading model from {}".format(f_weight))
-        model = load_model(f_weight, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef_for_training': dice_coef_for_training})
+        model = load_model(f_weight) # custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef_for_training': dice_coef_for_training})
         lossfunc = get_loss(args.loss)
         metricfuncs = get_metrics(args)
         recompile = False
