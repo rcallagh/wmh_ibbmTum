@@ -48,6 +48,22 @@ def get_unet(img_shape = None, f_weight=None, args=None):
     if full_model:
         print("Loading model from {}".format(f_weight))
         model = load_model(f_weight, custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef_for_training': dice_coef_for_training})
+        lossfunc = get_loss(args.loss)
+        metricfuncs = get_metrics(args)
+        recompile = False
+        if lossfunc != model.loss:
+            recompile = True
+        for metric in metricfuncs:
+            if any(model.metrics) == metric:
+                continue
+            else:
+                recompile = True
+                break
+
+        if recompile:
+            print('Recompiling model with new loss/metrics')
+            model.compile(optimize=model.optimizer, loss=lossfunc, metrics=metricfuncs)
+
         return model
 
     if args is not None:
