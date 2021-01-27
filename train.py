@@ -135,7 +135,7 @@ def train(args, i_network):
 
 
     if args.output_test_aug:
-        dataGen_train_aug_test = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], batch_size=bs, shuffle=shuffle)
+        dataGen_train_aug_test = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
         dataGen_val_aug_test = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle)
         for i in range(10):
             img_i, mask_i = dataGen_train_aug_test.__getitem__(i)
