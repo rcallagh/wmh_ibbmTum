@@ -62,7 +62,7 @@ def get_unet(img_shape = None, f_weight=None, args=None):
 
         if recompile:
             print('Recompiling model with new loss/metrics')
-            model.compile(optimize=model.optimizer, loss=lossfunc, metrics=metricfuncs)
+            model.compile(optimizer=model.optimizer, loss=lossfunc, metrics=metricfuncs)
 
         return model
 
