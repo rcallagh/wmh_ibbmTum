@@ -135,9 +135,9 @@ def train(args, i_network):
 
 
     if args.output_test_aug:
-        dataGen_train_aug_test = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
-        dataGen_val_aug_test = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle)
-        for i in range(10):
+        dataGen_train_aug_test = DataGenerator(images[partitions['training'][0:bs], ...], masks[partitions['training'][0:bs], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
+        dataGen_val_aug_test = DataGenerator(images[partitions['validation'][0:bs], ...], masks[partitions['validation'][0:bs], ...], batch_size=bs, shuffle=shuffle)
+        for i in range(1):
             img_i, mask_i = dataGen_train_aug_test.__getitem__(i)
             val_i, val_mask_i = dataGen_val_aug_test.__getitem__(i)
             sio.savemat('/SAN/medic/camino_2point0/Ross/test_img{}.mat'.format(i), {'img_aug':img_i[..., 0]})
