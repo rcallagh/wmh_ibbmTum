@@ -133,6 +133,8 @@ def train(args, i_network):
     dataGen_train = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
     dataGen_val = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle) #Do not pass aug_params so as not to do the augmentation during val
 
+    sio.savemat('/SAN/medic/camino_2point0/Ross/train_ind.mat', partitions['training'])
+    sio.savemat('/SAN/medic/camino_2point0/Ross/val_ind.mat', partitions['validation'])
 
     if args.output_test_aug:
         dataGen_train_aug_test = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
