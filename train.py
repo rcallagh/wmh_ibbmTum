@@ -133,15 +133,13 @@ def train(args, i_network):
     dataGen_train = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
     dataGen_val = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle) #Do not pass aug_params so as not to do the augmentation during val
 
-    sio.savemat('/SAN/medic/camino_2point0/Ross/train_ind.mat', partitions['training'])
-    sio.savemat('/SAN/medic/camino_2point0/Ross/val_ind.mat', partitions['validation'])
 
     if args.output_test_aug:
         dataGen_train_aug_test = DataGenerator(images[partitions['training'], ...], masks[partitions['training'], ...], aug_params=aug_params, batch_size=bs, shuffle=shuffle)
         dataGen_val_aug_test = DataGenerator(images[partitions['validation'], ...], masks[partitions['validation'], ...], batch_size=bs, shuffle=shuffle)
         for i in range(10):
             img_i, mask_i = dataGen_train_aug_test.__getitem__(i)
-            val_i, val_mask_i = dataGen_train_aug_test.__getitem__(i)
+            val_i, val_mask_i = dataGen_val_aug_test.__getitem__(i)
             sio.savemat('/SAN/medic/camino_2point0/Ross/test_img{}.mat'.format(i), {'img_aug':img_i[..., 0]})
             sio.savemat('/SAN/medic/camino_2point0/Ross/test_mask{}.mat'.format(i), {'mask_aug':mask_i[..., 0]})
             sio.savemat('/SAN/medic/camino_2point0/Ross/test_val_img{}.mat'.format(i), {'val_aug':val_i[..., 0]})
