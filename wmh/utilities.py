@@ -276,6 +276,8 @@ def augmentation(x_0, x_1, y, aug_params=None):
     x_0 = apply_transform(x_0[..., np.newaxis], transform_matrix, channel_axis=2)
     x_1 = apply_transform(x_1[..., np.newaxis], transform_matrix, channel_axis=2)
     y = apply_transform(y[..., np.newaxis], transform_matrix, channel_axis=2)
+    y[y >= 0.45 ] = 1.
+    y[y < 0.45] = 0.
     return x_0[..., 0], x_1[..., 0], y[..., 0]
 
 def transform_matrix_offset_center(matrix, x, y):
