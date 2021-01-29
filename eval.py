@@ -59,6 +59,8 @@ def main():
     parser.add_argument('--num_unet_start', type=int, default=0, help='Number from which to start training networks (i.e. start from network 1 if network 0 is done) (default: 0)')
     parser.add_argument('--ignore_frac', type=float, default = 0.125, help='Fraction of slices from top and bottome to ignore (default: 0.125)')
     parser.add_argument('--compute_metrics', action='store_true', help='Flag whether to compute metrics after segmentation (requires ground truth)')
+    parser.add_argument('--loss', choices=['dice', 'jaccard', 'dsc', 'tversky', 'focal-tversky'], default='dice', help='Choice of loss function (default: dice)')
+    parser.add_argument('--metrics', choices=['dice', 'jaccard', 'dsc', 'tversky', 'focal-tversky'], nargs='*', default=None, help='Choice of metric functions (default: None)')
     args = parser.parse_args()
 
     warnings.filterwarnings("ignore")
@@ -77,8 +79,6 @@ def main():
             modelEval.compute_metrics()
     modelEval.write_metrics()
     # import pdb; pdb.set_trace()
-
-
 
 if __name__=='__main__':
     main()
