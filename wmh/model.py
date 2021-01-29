@@ -48,26 +48,29 @@ def get_unet(img_shape = None, f_weight=None, args=None):
     if full_model:
         print("Loading model from {}".format(f_weight))
         model = load_model(f_weight, custom_objects=all_losses)
-        lossfunc = get_loss(args.loss)
-        metricfuncs = get_metrics(args)
-        recompile = False
-        if lossfunc != model.loss:
-            recompile = True
-        for metric in metricfuncs:
-            if any(model.metrics) == metric:
-                continue
-            else:
+        if args is not None:
+            lossfunc = get_loss
+            metricfuncs = get_metrics(args)
+            recompile = False
+            if lossfunc != model.loss:
                 recompile = True
-                break
+            for metric in metricfuncs:
+                if any(model.metrics) == metric:
+                    continue
+                else:
+                    recompile = True
+                    break
 
-        if recompile:
-            print('Recompiling model with new loss/metrics')
-            model.compile(optimizer=model.optimizer, loss=lossfunc, metrics=metricfuncs)
+            if recompile:
+                print('Recompiling model with new loss/metrics')
+                model.compile(optimizer=model.optimizer, loss=lossfunc, metrics=metricfuncs)
 
         return model
 
     if args is not None:
         lr = args.lr
+    else:
+        lr = 1e-2
 
     dim_ordering = 'tf'
     inputs = Input(shape = img_shape)
@@ -124,8 +127,12 @@ def get_unet(img_shape = None, f_weight=None, args=None):
     conv10 = Conv2D(1, 1, 1, activation='sigmoid', dim_ordering=dim_ordering)(conv9)
     model = Model(input=inputs, output=conv10)
 
-    lossfunc = get_loss(args.loss)
-    metricfuncs = get_metrics(args)
+    if args is not None:
+        lossfunc = get_loss(args.loss)
+        metricfuncs = get_metrics(args)
+    else:
+        lossfunc = dice_coef_loss
+        metricfuncs = [dice_coef_loss]
 
     model.compile(optimizer=Adam(lr=lr), loss=lossfunc, metrics=metricfuncs)
 
