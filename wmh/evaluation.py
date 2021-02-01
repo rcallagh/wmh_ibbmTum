@@ -71,6 +71,9 @@ class ModelEvaluator():
                 weight_str = os.path.join(self.args.model_dir, 'FLAIR_T1', str(i_network))
                 img_shape=(self.proc_params.rows_standard, self.proc_params.cols_standard, 2)
 
+            if self.args.model_suffix is not None:
+                weight_str += '_' + self.args.model_suffix
+
             weight_path = weight_str + '.h5'
             model = get_unet(img_shape, weight_path)
             self.models.append(model)
