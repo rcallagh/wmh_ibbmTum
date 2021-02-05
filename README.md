@@ -3,9 +3,11 @@ A white matter hyperintensity segmentation tool based on sysu_media, the winnner
 
 ## Installation 
 The code has been tested using python 3.6.4 but should work for most python 3.6+ versions. The main dependencies of this method are, Keras 2.3.1, TensorFlow 1.14 and SimpleITK 2.0.1 among others. Installation of the dependencies should be as simple as
-'''
+
+``` bash
 pip3 install -r requirements.txt
-'''
+```
+
 
 ## Usage
 The body of the method is in the [wmh](wmh) folder, which in turn contains the [weights](wmh/weights) folder which contains the weights of the pre-trained networks. 
@@ -18,14 +20,18 @@ The main scripts for using the code are:
     
 ### Prediction
 An example code to evaluate model given a .csv file from random_test_train_split
-'''bash
+
+``` bash
 python3 ./eval.py --csv_file ./subjects_ADNI_train.csv --num_unet 3 --compute_metrics --T1_name mri/brain-in-rawavg_mgz2nii.nii.gz --FLAIR_name flair.nii.gz --gt_name mri/wmh.nii.gz
-'''
+```
+
+
 <details>
   <summary>
     Full usage
   </summary>  
-'''
+
+``` bash
 usage: eval.py [-h] [--data_dir DATA_DIR] [--csv_file CSV_FILE]
                [--pattern PATTERN] [--T1_name T1_NAME]
                [--FLAIR_name FLAIR_NAME] [--gt_name GT_NAME]
@@ -81,7 +87,8 @@ optional arguments:
   --model_suffix MODEL_SUFFIX
                         Suffix to model name so model will save as
                         {num_net}_{suffix}.h5 (default: None)
-'''
+
+```
 </details>
 
 
